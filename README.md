@@ -1,6 +1,8 @@
 BiOscillator
 ===========
 
+![screenshot](http://i.imgur.com/WaLvXbZ.png)
+
 ## Polyphonic 2-OSC Synthesizer
 
 ### Features
