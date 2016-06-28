@@ -1,7 +1,7 @@
 BiOscillator
 ===========
 
-# Polyphonic 2-OSC Synthesizer
+## Polyphonic 2-OSC Synthesizer
 
 ### Features
 
@@ -9,3 +9,10 @@ BiOscillator
 * Amplitude / Filter Envelopes
 * Pitchbend Supported
 * Vibrato
+
+### Planned
+* Preset Library
+* Sequencer/Arpeggiator
+
+## Licensing
+See [LICENSE_WTFPL](LICENSE_WTFPL);
