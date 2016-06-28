@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>BiOscillator</title>
+	<meta charset="utf-8">
+	<meta name="viewport"  content="width=device-width, initial-scale=1">
+	<script type="text/javascript" src="meedee.js"></script>
+	<style type="text/css">
+	html 
+	{
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none;   /* Chrome/Safari/Opera */
+	    -khtml-user-select: none;    /* Konqueror */
+	    -moz-user-select: none;      /* Firefox */
+	    -ms-user-select: none;       /* Internet Explorer/Edge */
+	    user-select: none; 
+	}
+	section div { display: inline-block; float:left;}
+		body 
+		{
+			margin: 3% auto;
+			padding: 10px;
+			max-width: 700px;
+			font-family: monospace;
+			background: repeating-linear-gradient(#111,#111,#1c1c1c);
+			background-size: 15px;
+			color: #eee;
+		}
+		header
+		{
+			font-size: 200%;
+			margin: 50px auto; line-height:0.5em;
+		}
+		#indicator>span
+		{
+			position: relative;
+			transition: .1s all ease;
+		}
+		.half 
+		{
+			width: 50%;
+		}
+		.full 
+		{
+			width: 100%;
+			clear: both;
+		}
+		.groupContainer 
+		{
+			padding: 10px 20px 10px 0;
+			min-height: 100px;
+			box-sizing: border-box;
+		}
+		.controlLabel 
+		{
+			width: 20%;
+		}
+		.controlContainer 
+		{
+			width: 80%;
+			height: 1.4em;
+			cursor: e-resize;
+		}
+		.sliderControl
+		{
+			width: 100%;
+			border: 1px solid #eee;
+			height: 1em;
+			overflow:hidden;
+		}
+		.sliderControlValue
+		{
+			height: 1em;
+			background: #eee; color: #111;
+			line-height: 1em;
+		}
+		.sliderControlValue.signed
+		{
+			left: 50%;
+			position: relative;
+			border-left: 1px solid #eee;
+		}
+		.button
+		{
+			cursor: pointer;
+			display: inline-block;
+			height: 1em;
+			float: left;
+			padding: 1px; margin: auto 5px;
+			border: 1px solid #eee;
+		}
+		.button:first-child
+		{
+			margin-left:0;
+		}
+		input[type=text]
+		{	
+			margin: auto 5px;
+			height: 1em;
+			float:left;
+			background: #111;
+			font-family: monospace;
+			border: 1px solid #eee;
+			color: #eee;
+		}
+	</style>
+</head>
+<body>
+	<div id="masterContainer">
+		<header>
+			&nbsp;&nbsp;/<span id="indicator"></span>\<br>
+			-- BiOscillator --><br>
+			&nbsp;&nbsp;\____________/
+		</header>
+		<section>
+			<div class="groupContainer full" style="min-height:1em;">
+				<div class="button" onclick="savePatch()">SAVE</div>
+				<div class="button" onclick="loadPatch()">LOAD</div>
+				<div class="button" onclick="synth.killAll()">PANIC</div>
+				<div class="button" onclick="loadPatch(atob('eyJ2ZWxvY2l0eSI6MSwiZ2FpbjEiOjAuNzUwMDAwMDAwMDAwMDAwMiwidHJhbnNwb3NlMSI6LTEyLCJ0dW5lMSI6MCwid2F2ZWZvcm0xIjoic2F3dG9vdGgiLCJnYWluMiI6MC42OTQwMDAwMDAwMDAwMDAyLCJ0cmFuc3Bvc2UyIjotMTIsInR1bmUyIjowLCJ3YXZlZm9ybTIiOiJzYXd0b290aCIsImF0dGFjayI6MiwiZGVjYXkiOjcyMCwic3VzdGFpbiI6MC45OTAwMDAwMDAwMDAwMDAzLCJyZWxlYXNlIjo0MjAuMDAwMSwiZmF0dGFjayI6MjkwLCJmZGVjYXkiOjI4MCwiZnN1c3RhaW4iOjAuMDA0OTk5OTk5OTk5OTk5OTQ3LCJmcmVsZWFzZSI6NDIwLCJmY3V0IjoxNTYuNzg5OTAyMjExODEwNywiZnEiOjE1LjAwMDAwMDAwMDAwMDAwMiwiZmFtb3VudCI6MC4yMDAwMDAwMDAwMDAwMDAyMywiZnR5cGUiOiJsb3dwYXNzIiwicGl0Y2hCZW5kUmFuZ2UiOjEyfWAzLjVgMA=='))">WOW</div>
+				<input id="patchData" type="text" placeholder="paste patch here" size=40/>
+				<div class="button" target="_blank" href="https://github.com/khoin/BiOscillator">FORK ME ON GITHUB</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Oscillator 1</h2>
+				<div class="controlLabel">Vol</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc1vol" class="sliderControlValue">64</div></div>
+				</div>
+				<div class="controlLabel">Semitone</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc1sem" class="sliderControlValue signed">0</div></div>
+				</div>
+				<div class="controlLabel">Tune</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc1tun" class="sliderControlValue signed">0</div></div>
+				</div>
+				<div class="controlLabel">Waveform</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc1wav" class="sliderControlValue">Sin</div></div>
+				</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Oscillator 2</h2>
+				<div class="controlLabel">Vol</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc2vol" class="sliderControlValue">64</div></div>
+				</div>
+				<div class="controlLabel">Semitone</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc2sem" class="sliderControlValue signed">0</div></div>
+				</div>
+				<div class="controlLabel">Tune</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc2tun" class="sliderControlValue signed">0</div></div>
+				</div>
+				<div class="controlLabel">Waveform</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="osc2wav" class="sliderControlValue">Sin</div></div>
+				</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Amplitude Envelope</h2>
+				<div class="controlLabel">Attack</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="ampatt" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Decay</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="ampdec" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Sustain</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="ampsus" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Release</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="amprel" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Velocity</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="ampvel" class="sliderControlValue">N/A</div></div>
+				</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Filter Envelope</h2>
+				<div class="controlLabel">Attack</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filatt" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Decay</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="fildec" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Sustain</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filsus" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Release</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filrel" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Amount</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filamt" class="sliderControlValue">N/A</div></div>
+				</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Vibrato &amp; P.Bend</h2>
+				<div class="controlLabel">Depth</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="vibratoDepth" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Rate</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="vibratoRate" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">BendRange</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="bendRange" class="sliderControlValue">N/A</div></div>
+				</div>
+			</div>
+			<div class="groupContainer half">
+				<h2 class="groupLabel">Filter</h2>
+				<div class="controlLabel">Cutoff</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filcut" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Resonant</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filres" class="sliderControlValue">N/A</div></div>
+				</div>
+				<div class="controlLabel">Type</div>
+				<div class="controlContainer">
+					<div class="sliderControl"><div id="filtyp" class="sliderControlValue">N/A</div></div>
+				</div>
+			</div>
+		</section>
+	</div>
+	<script>
+	var d=document;
+	function note(midi) {
+		return Math.pow(2, (midi-69)/12 ) * 440;
+	}
+
+		var Synth = function(ctx, out, props) {
+			var _ = this;
+			var activeNotes = [];
+			var oscillators = [];
+			var gains = [];
+			var envelopes  = [];
+			var filters = [];
+			this.unmappedOscs = [];
+
+			var props 		= props 			|| {},
+			 	transpose1 	= props.transpose1 	|| 0,
+			 	transpose2 	= props.transpose2 	|| 0,
+			 	gain1 		= props.gain1 		|| 1,
+			 	gain2 		= props.gain2 		|| 1,
+			 	wave1 		= props.waveform1 	|| 'sine',
+			 	wave2 		= props.waveform2 	|| 'sine',
+			 	tune1 		= props.tune1 		|| 0,
+			 	tune2 		= props.tune2 		|| 0,
+			 	attack 		= props.attack 		|| 0,
+			 	decay 		= props.decay 		|| 0,
+			 	sustain 	= props.sustain 	|| 1,
+			 	release 	= props.release 	|| 0,
+			 	velocity 	= props.velocity 	|| 1,
+
+			 	fcut 		= props.fcut 		|| 48000,
+			 	fq 			= props.fq 			|| 0.001,
+			 	ftype 		= props.ftype 		|| 'lowpass',
+			 	fattack 	= props.fattack 	|| 0.01,
+			 	fdecay 		= props.fdecay 		|| 300,
+			 	fsustain 	= props.fsustain 	|| 1,
+			 	frelease 	= props.frelease 	|| 1,
+			 	famount		= props.famount		|| 0;
+			var pitchBendRange = props.pitchBendRange || 12,
+				currentBend = 0;
+
+			this.load = function(_props) {
+				transpose1 	= props.transpose1 	= _props.transpose1 ;
+			 	transpose2 	= props.transpose2 	= _props.transpose2 ;
+			 	gain1 		= props.gain1 		= _props.gain1 		;
+			 	gain2 		= props.gain2  		= _props.gain2 		;
+			 	wave1 		= props.waveform1 	= _props.waveform1 	;
+			 	wave2 		= props.waveform2 	= _props.waveform2 	;
+			 	tune1 		= props.tune1 		= _props.tune1 		;
+			 	tune2 		= props.tune2 		= _props.tune2 		;
+			 	attack 		= props.attack 		= _props.attack 	;
+			 	decay 		= props.decay 		= _props.decay 		;
+			 	sustain 	= props.sustain 	= _props.sustain 	;
+			 	release 	= props.release 	= _props.release 	;
+			 	velocity 	= props.velocity 	= _props.velocity 	;
+			 	fcut 		= props.fcut 		= _props.fcut 		;
+			 	fq 			= props.fq 			= _props.fq 		;
+			 	ftype 		= props.ftype 		= _props.ftype 		;
+			 	fattack 	= props.fattack 	= _props.fattack 	;
+			 	fdecay 		= props.fdecay 		= _props.fdecay 	;
+			 	fsustain 	= props.fsustain 	= _props.fsustain 	;
+			 	frelease 	= props.frelease 	= _props.frelease 	;
+			 	famount		= props.famount		= _props.famount	;
+			 	evokeOscillators();
+			}
+
+			var evokeOscillators = function(a) {
+				activeNotes.forEach ( function(osc) {
+					if(a) {
+						gains[osc][0].gain.value = gain1/10;
+						gains[osc][1].gain.value = gain2/10;
+					}
+					oscillators[osc][0]
+					.frequency
+					.exponentialRampToValueAtTime(note(osc+ transpose1+ currentBend )+tune1 , ctx.currentTime);
+					oscillators[osc][1]
+					.frequency
+					.exponentialRampToValueAtTime(note(osc+ transpose2+ currentBend )+tune2 , ctx.currentTime);
+					oscillators[osc][0].type = wave1;
+					oscillators[osc][1].type = wave2;
+				});
+			}
+
+			this.killAll = function() {
+				_.unmappedOscs.forEach( function(a){
+					a.stop();
+				});
+			}
+
+			this.setDetune = function(tune) { 
+				currentBend = ((tune-64)/63.5)*pitchBendRange;
+				evokeOscillators();
+			}
+			this.setPitchBendRange = function(val) {
+				currentBend /= pitchBendRange;
+				props.pitchBendRange = pitchBendRange = Math.round(Math.min(12, Math.max(1, val)));
+				currentBend *= pitchBendRange;
+				evokeOscillators();
+			}
+
+			this.getActiveNotes = function() {
+				return activeNotes;
+			}
+			this.getOscillators = function() {
+				return oscillators;
+			}
+
+			this.returnProps = function() {
+				return props;
+			}
+
+			this.setGain1 = function(val) {
+				props.gain1 = gain1 = Math.min(1,Math.max(gain1+val,0));
+				evokeOscillators(1);
+			}
+			this.setTune1 = function(val) {
+				props.tune1 = tune1 = Math.min(20,Math.max(tune1+val,-20));
+				evokeOscillators();
+			}
+			this.setTranpose1 = function(val) {
+				props.transpose1 = transpose1 = Math.min(24,Math.max(Math.round(val),-24));
+				evokeOscillators();
+			}
+			this.setWaveform1 = function(val) {
+				props.waveform1 = wave1 = val;
+				evokeOscillators();
+			}
+			this.setGain2 = function(val) {
+				props.gain2 = gain2 = Math.min(1,Math.max(gain2+val,0));
+				evokeOscillators(1);
+			}
+			this.setTune2 = function(val) {
+				props.tune2 = tune2 = Math.min(20,Math.max(tune2+val,-20));
+				evokeOscillators();
+			}
+			this.setTranpose2 = function(val) {
+				props.transpose2 = transpose2 = Math.min(24,Math.max(Math.round(val),-24));
+				evokeOscillators();
+			}
+			this.setWaveform2 = function(val) {
+				props.waveform2 = wave2 = val;
+				evokeOscillators();
+			}
+			//aenv
+			this.setAttack = function(att) {
+				props.attack = attack = Math.min(5000,Math.max(attack+att,2));
+			}
+
+			this.setDecay = function(dec) {
+				props.decay = decay = Math.min(5000,Math.max(decay+dec,0.0001));
+			}
+
+			this.setSustain = function(sus) {
+				props.sustain = sustain = Math.min(1,Math.max(sustain+sus,0.0001));
+			}
+
+			this.setRelease = function(rel) {
+				props.release = release = Math.min(5000,Math.max(release+rel,0.0001));
+			}
+			this.setVelocity = function(vel) {
+				props.velocity = velocity = Math.min(1, Math.max(0, velocity+vel));
+			}
+			//fenv
+			this.setfAttack = function(att) {
+				props.fattack = fattack = Math.min(5000,Math.max(fattack+att,1));
+			}
+
+			this.setfDecay = function(dec) {
+				props.fdecay = fdecay = Math.min(5000,Math.max(fdecay+dec,1));
+			}
+
+			this.setfSustain = function(sus) {
+				props.fsustain = fsustain = Math.min(1,Math.max(fsustain+sus,0.001));
+			}
+
+			this.setfRelease = function(rel) {
+				props.frelease = frelease = Math.min(5000,Math.max(frelease+rel,1));
+			}
+			this.setfCut = function(cut) {
+				props.fcut = fcut = Math.min(22500, Math.max(20, fcut+cut));
+				activeNotes.forEach(function(fil) { 
+					filters[fil].frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime);
+				});
+			}
+			this.setfQ = function(q) {
+				props.fq = fq = Math.min(30, Math.max(0.01, fq+q));
+				activeNotes.forEach(function(fil) { 
+					filters[fil].Q.value = fq;
+				});
+			}
+			this.setfType = function(typ) {
+				props.ftype = ftype = typ;
+				activeNotes.forEach(function(fil) { 
+					filters[fil].type = typ;
+				});
+			}
+			this.setfAmount= function(amt) {
+				props.famount = famount = Math.min(1,Math.max(0,famount + amt));
+			}
+
+			this.playNote = function(midi, ga){
+				var osc1 = ctx.createOscillator();
+				var osc2 = ctx.createOscillator();
+				var osc1gain = ctx.createGain();
+				var osc2gain = ctx.createGain();
+
+				var envelope = ctx.createGain();
+
+				var filter = ctx.createBiquadFilter();
+				
+				filter.frequency.value = fcut;
+				filter.Q.value = fq;
+				filter.type = ftype;
+
+				envelope.gain.value = 0;
+				osc1gain.gain.value = (gain1/10)*((1-velocity) + velocity*(ga/127));
+				osc2gain.gain.value = (gain2/10)*((1-velocity) + velocity*(ga/127));
+
+				osc1.frequency.value = note(midi + transpose1 + currentBend) + tune1;
+				osc1.type = wave1;
+				
+				osc2.frequency.value = note(midi + transpose2 + currentBend) + tune2;
+				osc2.type = wave2;
+
+				osc1.connect(osc1gain);
+				osc2.connect(osc2gain);
+				osc1gain.connect(envelope);
+				osc2gain.connect(envelope);
+				osc1.start();
+				osc2.start();
+
+				envelope.connect(filter);
+				filter.connect(out);
+				// Attack
+				envelope.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime);
+				envelope.gain.exponentialRampToValueAtTime(1, ctx.currentTime + (attack/1000));
+				// Decay & Sustain
+				envelope.gain.exponentialRampToValueAtTime(sustain, ctx.currentTime + (attack/1000) + (decay/1000));
+				//Velocity
+
+				// Fattack 
+				filter.frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime);
+				filter.frequency.exponentialRampToValueAtTime(fcut+famount*22500, ctx.currentTime + (fattack/1000));
+				// Filter Decay & Sustain
+				filter.frequency.exponentialRampToValueAtTime(fcut+fsustain*famount*22500, ctx.currentTime + (fattack/1000) + (fdecay/1000));
+
+				envelopes[midi] = envelope;
+				filters[midi] = filter;
+				oscillators[midi] = [];
+				oscillators[midi][0] = osc1;
+				oscillators[midi][1] = osc2;
+				gains[midi] = [];
+				gains[midi][0] = osc1gain;
+				gains[midi][1] = osc2gain;
+				this.unmappedOscs.push(osc1,osc2);
+				activeNotes.push(midi);
+			}
+
+			this.killNote = function(midi) {
+				
+				// Release
+				//envelopes[midi].gain.exponentialRampToValueAtTime(sustain, ctx.currentTime);
+				envelopes[midi].gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (release/1000));
+
+				//FilterRelease
+				filters[midi].frequency.exponentialRampToValueAtTime(filters[midi].frequency.value, ctx.currentTime);
+				filters[midi].frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime + (frelease/1000));
+				
+				oscillators[midi][0].stop(ctx.currentTime + (release/1000));
+				oscillators[midi][1].stop(ctx.currentTime + (release/1000));
+				
+				oscillators[midi] = 
+				oscillators[midi][0] = 
+				oscillators[midi][1] = 
+				gains[midi] =
+				filters[midi]= undefined;
+				activeNotes.forEach( function(note) {
+					if(note == midi) {
+
+						activeNotes.splice(activeNotes.indexOf(midi),1);
+						//oscillators.splice(oscillators.indexOf(midi),1);
+						//gains.splice(gains.indexOf(midi),1);
+					}
+				});	
+			
+			}
+		return this;
+	}
+
+
+	var aC = new AudioContext();
+
+	var synth = new Synth(aC, aC.destination, {
+		velocity  	: 1,
+		gain1		: 0.45,
+		transpose1	: 0,
+		tune1 		: 0 ,
+		waveform1 	: 'sawtooth',
+		gain2 		: 0.45,
+		transpose2  : 7,
+		tune2 		: 0,
+		waveform2 	: 'sawtooth',
+		attack 		: 3,
+		decay 		: 1000,
+		sustain     : 0.3, 
+		release 	: 260,
+		fattack 	: 10,
+		fdecay		: 220,
+		fsustain 	: 0.4,
+		frelease 	: 680,
+		fcut 		: 200,
+		fq 			: 8,
+		famount 	: 0.5,
+		ftype 		: 'lowpass',
+		pitchBendRange: 12
+	});
+
+	//indicator
+	var indicators = [];
+	"¯¯¯¯¯¯¯¯¯¯¯¯".split("").forEach(function(indi,index,all) {
+		var el = d.createElement("span");
+		el.style.color = "hsla("+index*30+",100%,90%,1)";
+		el.textContent = indi;
+		indicators.push(el);
+		d.getElementById("indicator").appendChild(el);
+		setTimeout(function() {
+			el.style.top = "-10px";
+		},100*index);
+		setTimeout(function() {
+			el.style.top = "0px";
+		},400+100*index);
+	});
+
+	MIDI.on("any", function(m,e) { 
+
+		function test(val) {
+			if 		( val >= 128 && val < 144) { return 'noteoff'; }
+			else if ( val >= 144 && val < 160) { return 'noteon' ; }
+			else if ( val >= 224 && val < 240) { return 'pbend' ;  }
+		}
+
+		switch(test(e.data[0])) {
+			case 'noteon':
+				synth.playNote(e.data[1], e.data[2]);
+				indicators[e.data[1]%12].style.top = "-"+10*(e.data[2])/127+"px";
+				break;
+			case 'noteoff':
+				synth.killNote(e.data[1], e.data[2]);
+				indicators[e.data[1]%12].style.top = "0px";
+				break;
+			case 'pbend':
+				synth.setDetune(e.data[2]);
+				break;
+		};
+	});
+
+	//Vibrato
+	var VIBRATO_RATE = 7,
+		VIBRATO_DEPTH= 50;
+	setInterval( function() {
+		(synth.unmappedOscs).forEach(function(osc) {
+			//if (!osc) return;
+			osc.detune.value = 0.001+VIBRATO_DEPTH*Math.sin(Date.now()/1000*VIBRATO_RATE*Math.PI*2);
+		})
+	},1);
+
+
+	function updateSlider(element, value, displayText) {
+		element.textContent = displayText;
+		element.style.width = value*100 + "%";
+	}
+
+	function updateSignedSlider(element,value,displayText) {
+		element.textContent = displayText;
+		element.style.width = Math.abs(value)*100 + "%";
+		element.style.left 	= (value >=0)? "50%" : (50-Math.abs(value)*100)+"%";
+	}
+
+	function listenSlider(element, processor) {
+		element.addEventListener("mousemove", function(e) {
+			if(e.buttons == 1) {
+				processor(e);
+			}
+		});
+	}
+
+	
+
+	var waveforms = ['sine', 'triangle', 'sawtooth', 'square'];
+	var FILTER_TYPES = ["lowpass", "highpass","bandpass"];
+	var	OSC1VOL = d.getElementById("osc1vol"),
+		OSC1TUN = d.getElementById("osc1tun"),
+		OSC1SEM = d.getElementById("osc1sem"),
+		OSC1WAV = d.getElementById("osc1wav"),
+		OSC2VOL = d.getElementById("osc2vol"),
+		OSC2TUN = d.getElementById("osc2tun"),
+		OSC2SEM = d.getElementById("osc2sem"),
+		OSC2WAV = d.getElementById("osc2wav");
+	var AMPATT 	= d.getElementById("ampatt"),
+		AMPDEC 	= d.getElementById("ampdec"),
+		AMPSUS 	= d.getElementById("ampsus"),
+		AMPREL 	= d.getElementById("amprel"),
+		AMPVEL 	= d.getElementById("ampvel");
+	var UI_WAV1 = 0,
+		UI_SEM1 = 0,
+		UI_WAV2 = 0,
+		UI_SEM2 = 0;
+	//Vibrato
+	var UI_VIBR_DEPTH = d.getElementById("vibratoDepth"),
+		UI_VIBR_RATE  = d.getElementById("vibratoRate"),
+		BENDRANGE 	  = d.getElementById("bendRange");
+		UI_BEND = 12;
+	//filter
+	var FILATT 	= d.getElementById("filatt"),
+		FILDEC 	= d.getElementById("fildec"),
+		FILSUS 	= d.getElementById("filsus"),
+		FILREL 	= d.getElementById("filrel"),
+		FILCUT 	= d.getElementById("filcut"),
+		FILRES 	= d.getElementById("filres"),
+		FILAMT 	= d.getElementById("filamt"),
+		FILTYP 	= d.getElementById("filtyp"),
+		UI_FTYP  = 0;
+	
+	//init UI
+	function evokeUISettings() {
+		var synthSettings = synth.returnProps();
+
+		updateSlider(OSC1VOL, synthSettings.gain1		, synthSettings.gain1*100+"%");
+		updateSignedSlider(OSC1TUN, synthSettings.tune1/40 		, synthSettings.tune1);
+		updateSignedSlider(OSC1SEM, synthSettings.transpose1/48 , synthSettings.transpose1 );
+		updateSlider(OSC1WAV, waveforms.indexOf(synthSettings.waveform1)/3, synthSettings.waveform1 );
+		UI_SEM1 = synthSettings.transpose1;
+		UI_WAV1 = waveforms.indexOf(synthSettings.waveform1);
+		updateSlider(OSC2VOL, synthSettings.gain2		, synthSettings.gain2*100+"%");
+		updateSignedSlider(OSC2TUN, synthSettings.tune2/40 		, synthSettings.tune2);
+		updateSignedSlider(OSC2SEM, synthSettings.transpose2/48 , synthSettings.transpose2 );
+		updateSlider(OSC2WAV, waveforms.indexOf(synthSettings.waveform2)/3, synthSettings.waveform2 );
+		UI_SEM2 = synthSettings.transpose2;
+		UI_WAV2 = waveforms.indexOf(synthSettings.waveform2);
+		
+		updateSlider(AMPATT, synthSettings.attack/5000, synthSettings.attack+"ms");
+		updateSlider(AMPDEC, synthSettings.decay/5000, synthSettings.decay+"ms");
+		updateSlider(AMPSUS, synthSettings.sustain/1, synthSettings.sustain*100+"%");
+		updateSlider(AMPREL, synthSettings.release/5000, synthSettings.release+"ms");
+		updateSlider(AMPVEL, synthSettings.velocity/1, synthSettings.velocity*100+"%");
+
+		updateSlider(FILATT, synthSettings.fattack/5000, synthSettings.fattack+"ms");
+		updateSlider(FILDEC, synthSettings.fdecay/5000, synthSettings.fdecay+"ms");
+		updateSlider(FILSUS, synthSettings.fsustain/1, synthSettings.fsustain*100+"%");
+		updateSlider(FILREL, synthSettings.frelease/5000, synthSettings.frelease+"ms");
+
+		updateSlider(FILCUT, synthSettings.fcut/22480, Math.round(synthSettings.fcut)+"Hz");
+		updateSlider(FILRES, synthSettings.fq/30, Math.round(synthSettings.fq)+"");
+		updateSlider(FILAMT, synthSettings.famount/1, Math.round(synthSettings.famount*1000)/10+"%");
+		updateSlider(FILTYP, FILTER_TYPES.indexOf(synthSettings.ftype)/2, synthSettings.ftype );
+		UI_FTYP = FILTER_TYPES.indexOf(synthSettings.ftype);
+
+		updateSlider(UI_VIBR_DEPTH, VIBRATO_DEPTH/200, VIBRATO_DEPTH+"¢");
+		updateSlider(UI_VIBR_RATE, VIBRATO_RATE/20, VIBRATO_RATE+"Hz");
+		updateSlider(BENDRANGE, synthSettings.pitchBendRange/12, synthSettings.pitchBendRange+"smts");
+	}
+	evokeUISettings();
+
+	//osc1
+	listenSlider(OSC1VOL.parentNode, function(e) { 
+		synth.setGain1(e.movementX/250);
+		updateSlider(OSC1VOL, synth.returnProps().gain1		, Math.round(synth.returnProps().gain1*100)+"%");
+	});
+	listenSlider(OSC1TUN.parentNode, function(e) { 
+		synth.setTune1(e.movementX/5);
+		updateSignedSlider(OSC1TUN, synth.returnProps().tune1/40		, Math.round(synth.returnProps().tune1));
+	});
+	listenSlider(OSC1SEM.parentNode, function(e) { 
+		UI_SEM1 += Math.min(1,Math.max(-1,e.movementX))/3;
+		synth.setTranpose1(UI_SEM1);
+		updateSignedSlider(OSC1SEM, synth.returnProps().transpose1/48	, synth.returnProps().transpose1);
+	});
+	listenSlider(OSC1WAV.parentNode, function(e) { 
+		UI_WAV1 += e.movementX/50;
+		UI_WAV1 = Math.min(3,Math.max(0,UI_WAV1));
+		synth.setWaveform1(waveforms[Math.floor(UI_WAV1)]);
+		updateSlider(OSC1WAV, waveforms.indexOf(synth.returnProps().waveform1)/3	, synth.returnProps().waveform1);
+	});
+	//osc2
+	listenSlider(OSC2VOL.parentNode, function(e) { 
+		synth.setGain2(e.movementX/250);
+		updateSlider(OSC2VOL, synth.returnProps().gain2		, Math.round(synth.returnProps().gain2*100)+"%");
+	});
+	listenSlider(OSC2TUN.parentNode, function(e) { 
+		synth.setTune2(e.movementX/5);
+		updateSignedSlider(OSC2TUN, synth.returnProps().tune2/40		, Math.round(synth.returnProps().tune2));
+	});
+	listenSlider(OSC2SEM.parentNode, function(e) { 
+		UI_SEM2 += Math.min(1,Math.max(-1,e.movementX))/3;
+		synth.setTranpose2(UI_SEM2);
+		updateSignedSlider(OSC2SEM, synth.returnProps().transpose2/48	, synth.returnProps().transpose2);
+	});
+	listenSlider(OSC2WAV.parentNode, function(e) { 
+		UI_WAV2 += e.movementX/50;
+		UI_WAV2 = Math.min(3,Math.max(0,UI_WAV2));
+		synth.setWaveform2(waveforms[Math.floor(UI_WAV2)]);
+		updateSlider(OSC2WAV, waveforms.indexOf(synth.returnProps().waveform2)/3	, synth.returnProps().waveform2);
+	});
+	//ampenv
+	listenSlider(AMPATT.parentNode, function(e) {
+		synth.setAttack(e.movementX*20);
+		updateSlider(AMPATT, synth.returnProps().attack/5000, Math.round(synth.returnProps().attack)+"ms");
+	});
+	listenSlider(AMPDEC.parentNode, function(e) {
+		synth.setDecay(e.movementX*20);
+		updateSlider(AMPDEC, synth.returnProps().decay/5000, Math.round(synth.returnProps().decay)+"ms");
+	});
+	listenSlider(AMPSUS.parentNode, function(e) {
+		synth.setSustain(e.movementX/200);
+		updateSlider(AMPSUS, synth.returnProps().sustain/1, Math.round(synth.returnProps().sustain*100)+"%");
+	});
+	listenSlider(AMPREL.parentNode, function(e) {
+		synth.setRelease(e.movementX*20);
+		updateSlider(AMPREL, synth.returnProps().release/5000, Math.round(synth.returnProps().release)+"ms");
+	});
+	listenSlider(AMPVEL.parentNode, function(e) {
+		synth.setVelocity(e.movementX/200);
+		updateSlider(AMPVEL, synth.returnProps().velocity/1, Math.round(synth.returnProps().velocity*100)+"%");
+	});
+	//filenv
+	listenSlider(FILATT.parentNode, function(e) {
+		synth.setfAttack(e.movementX*20);
+		updateSlider(FILATT, synth.returnProps().fattack/5000, Math.round(synth.returnProps().fattack)+"ms");
+	});
+	listenSlider(FILDEC.parentNode, function(e) {
+		synth.setfDecay(e.movementX*20);
+		updateSlider(FILDEC, synth.returnProps().fdecay/5000, Math.round(synth.returnProps().fdecay)+"ms");
+	});
+	listenSlider(FILSUS.parentNode, function(e) {
+		synth.setfSustain(e.movementX/200);
+		updateSlider(FILSUS, synth.returnProps().fsustain/1, Math.round(synth.returnProps().fsustain*100)+"%");
+	});
+	listenSlider(FILREL.parentNode, function(e) {
+		synth.setfRelease(e.movementX*20);
+		updateSlider(FILREL, synth.returnProps().frelease/5000, Math.round(synth.returnProps().frelease)+"ms");
+	});
+	//filsettings
+	listenSlider(FILCUT.parentNode, function(e) {
+		synth.setfCut(e.movementX*synth.returnProps().fcut/30);
+		updateSlider(FILCUT, Math.pow((synth.returnProps().fcut-20)/22480,1/3), Math.round(synth.returnProps().fcut)+"Hz");
+	});
+	listenSlider(FILRES.parentNode, function(e) {
+		synth.setfQ(e.movementX/3);
+		updateSlider(FILRES, synth.returnProps().fq/30, Math.round(synth.returnProps().fq));
+	});
+	listenSlider(FILAMT.parentNode, function(e) {
+		synth.setfAmount(e.movementX/150);
+		updateSlider(FILAMT, synth.returnProps().famount/1, Math.round(synth.returnProps().famount*1000)/10+"%");
+	});
+	listenSlider(FILTYP.parentNode, function(e) {
+		UI_FTYP = Math.min(2, Math.max(0,UI_FTYP+e.movementX/32));
+		synth.setfType(FILTER_TYPES[Math.floor(UI_FTYP)]);
+		updateSlider(FILTYP, FILTER_TYPES.indexOf(synth.returnProps().ftype)/2, synth.returnProps().ftype );
+	})
+
+	//vibrato 
+	listenSlider(UI_VIBR_DEPTH.parentNode, function(e) {
+		VIBRATO_DEPTH = Math.min(200, Math.max(0, VIBRATO_DEPTH+e.movementX*2));
+		updateSlider(UI_VIBR_DEPTH, VIBRATO_DEPTH/200, VIBRATO_DEPTH+"¢");
+	});
+	listenSlider(UI_VIBR_RATE.parentNode, function(e) {
+		VIBRATO_RATE = Math.min(20, Math.max(0.1, VIBRATO_RATE+e.movementX/10));
+		updateSlider(UI_VIBR_RATE, VIBRATO_RATE/20, Math.round(VIBRATO_RATE*10)/10+"Hz");
+	});
+	listenSlider(BENDRANGE.parentNode, function(e) {
+		UI_BEND += e.movementX/6;
+		synth.setPitchBendRange(UI_BEND);
+		updateSlider(BENDRANGE, synth.returnProps().pitchBendRange/12, synth.returnProps().pitchBendRange+"smts");
+	});
+
+
+	// Utils
+	function savePatch() {
+		//var field garfield harharhar
+		var field = d.getElementById("patchData");
+		var data = [];
+		data.push(JSON.stringify(synth.returnProps()), Math.round(VIBRATO_RATE*10)/10, Math.round(VIBRATO_DEPTH*10)/10);
+		field.value = data.join("`");
+		field.select();
+	}
+	function loadPatch(a) { 
+		var data = (a)? a.split("`"): d.getElementById("patchData").value.split("`");
+		try {
+			synth.load(JSON.parse(data[0]));
+		} catch(e){
+			d.getElementById("patchData").value = "wot?";
+			return;
+		}
+		VIBRATO_RATE = parseFloat(data[1]);
+		VIBRATO_DEPTH = parseFloat(data[2]);
+		evokeUISettings();
+	}
+
+	</script>
+</body>
+</html>
