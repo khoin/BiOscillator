@@ -237,604 +237,620 @@
 			</div>
 		</section>
 	</div>
-	<script>
-	var d=document;
-	function note(midi) {
-		return Math.pow(2, (midi-69)/12 ) * 440;
-	}
+<script>
+   var d=document;
+   function note(midi) {
+      return Math.pow(2, (midi-69)/12 ) * 440;
+   }
 
-		var Synth = function(ctx, out, props) {
-			var _ = this;
-			var activeNotes = [];
-			var oscillators = [];
-			var gains = [];
-			var envelopes  = [];
-			var filters = [];
-			this.unmappedOscs = [];
+   var Synth = function(ctx, out, props) {
+      var _ = this;
+      var activeNotes = [];
+      var oscillators = [];
+      var gains = [];
+      var envelopes  = [];
+      var filters = [];
+      this.unmappedOscs = [];
 
-			var props 		= props 			|| {},
-			 	transpose1 	= props.transpose1 	|| 0,
-			 	transpose2 	= props.transpose2 	|| 0,
-			 	gain1 		= props.gain1 		|| 1,
-			 	gain2 		= props.gain2 		|| 1,
-			 	wave1 		= props.waveform1 	|| 'sine',
-			 	wave2 		= props.waveform2 	|| 'sine',
-			 	tune1 		= props.tune1 		|| 0,
-			 	tune2 		= props.tune2 		|| 0,
-			 	attack 		= props.attack 		|| 0,
-			 	decay 		= props.decay 		|| 0,
-			 	sustain 	= props.sustain 	|| 1,
-			 	release 	= props.release 	|| 0,
-			 	velocity 	= props.velocity 	|| 1,
+      var _r            = props            || {};
+          _r.transpose1 = props.transpose1 || 0,
+          _r.transpose2 = props.transpose2 || 0,
+          _r.gain1      = props.gain1      || 1,
+          _r.gain2      = props.gain2      || 1,
+          _r.waveform1  = props.waveform1  || 'sine',
+          _r.waveform2  = props.waveform2  || 'sine',
+          _r.tune1      = props.tune1      || 0,
+          _r.tune2      = props.tune2      || 0,
+          _r.attack     = props.attack     || 0,
+          _r.decay      = props.decay      || 0,
+          _r.sustain    = props.sustain    || 1,
+          _r.release    = props.release    || 0,
+          _r.velocity   = props.velocity   || 1,
 
-			 	fcut 		= props.fcut 		|| 48000,
-			 	fq 			= props.fq 			|| 0.001,
-			 	ftype 		= props.ftype 		|| 'lowpass',
-			 	fattack 	= props.fattack 	|| 0.01,
-			 	fdecay 		= props.fdecay 		|| 300,
-			 	fsustain 	= props.fsustain 	|| 1,
-			 	frelease 	= props.frelease 	|| 1,
-			 	famount		= props.famount		|| 0;
-			var pitchBendRange = props.pitchBendRange || 12,
-				currentBend = 0;
+          _r.fcut       = props.fcut       || 22500,
+          _r.fq         = props.fq         || 0.001,
+          _r.ftype      = props.ftype      || 'lowpass',
+          _r.fattack    = props.fattack    || 0.01,
+          _r.fdecay     = props.fdecay     || 300,
+          _r.fsustain   = props.fsustain   || 1,
+          _r.frelease   = props.frelease   || 1,
+          _r.famount    = props.famount    || 0,
+          _r.pitchBendRange = props.pitchBendRange || 12;
+      var currentBend = 0;
 
-			this.load = function(_props) {
-				transpose1 	= props.transpose1 	= _props.transpose1 ;
-			 	transpose2 	= props.transpose2 	= _props.transpose2 ;
-			 	gain1 		= props.gain1 		= _props.gain1 		;
-			 	gain2 		= props.gain2  		= _props.gain2 		;
-			 	wave1 		= props.waveform1 	= _props.waveform1 	;
-			 	wave2 		= props.waveform2 	= _props.waveform2 	;
-			 	tune1 		= props.tune1 		= _props.tune1 		;
-			 	tune2 		= props.tune2 		= _props.tune2 		;
-			 	attack 		= props.attack 		= _props.attack 	;
-			 	decay 		= props.decay 		= _props.decay 		;
-			 	sustain 	= props.sustain 	= _props.sustain 	;
-			 	release 	= props.release 	= _props.release 	;
-			 	velocity 	= props.velocity 	= _props.velocity 	;
-			 	fcut 		= props.fcut 		= _props.fcut 		;
-			 	fq 			= props.fq 			= _props.fq 		;
-			 	ftype 		= props.ftype 		= _props.ftype 		;
-			 	fattack 	= props.fattack 	= _props.fattack 	;
-			 	fdecay 		= props.fdecay 		= _props.fdecay 	;
-			 	fsustain 	= props.fsustain 	= _props.fsustain 	;
-			 	frelease 	= props.frelease 	= _props.frelease 	;
-			 	famount		= props.famount		= _props.famount	;
-			 	evokeOscillators();
-			}
+      this.load = function(props) {
+         _r.transpose1  = props.transpose1;
+         _r.transpose2  = props.transpose2;
+         _r.gain1       = props.gain1     ;
+         _r.gain2       = props.gain2     ;
+         _r.waveform1   = props.waveform1 ;
+         _r.waveform2   = props.waveform2 ;
+         _r.tune1       = props.tune1     ;
+         _r.tune2       = props.tune2     ;
+         _r.attack      = props.attack    ;
+         _r.decay       = props.decay     ;
+         _r.sustain     = props.sustain   ;
+         _r.release     = props.release   ;
+         _r.velocity    = props.velocity  ;
+         _r.fcut        = props.fcut      ;
+         _r.fq          = props.fq        ;
+         _r.ftype       = props.ftype     ;
+         _r.fattack     = props.fattack   ;
+         _r.fdecay      = props.fdecay    ;
+         _r.fsustain    = props.fsustain  ;
+         _r.frelease    = props.frelease  ;
+         _r.famount     = props.famount   ;
+         evokeOscillators();
+      }
 
-			var evokeOscillators = function(a) {
-				activeNotes.forEach ( function(osc) {
-					if(a) {
-						gains[osc][0].gain.value = gain1/10;
-						gains[osc][1].gain.value = gain2/10;
-					}
-					oscillators[osc][0]
-					.frequency
-					.exponentialRampToValueAtTime(note(osc+ transpose1+ currentBend )+tune1 , ctx.currentTime);
-					oscillators[osc][1]
-					.frequency
-					.exponentialRampToValueAtTime(note(osc+ transpose2+ currentBend )+tune2 , ctx.currentTime);
-					oscillators[osc][0].type = wave1;
-					oscillators[osc][1].type = wave2;
-				});
-			}
+      var evokeOscillators = function(a) {
+         activeNotes.forEach ( function(midiNote) {
+            if (a) {
+               gains[midiNote][0].gain.value = _r.gain1/10;
+               gains[midiNote][1].gain.value = _r.gain2/10;
+            }
+            oscillators[midiNote][0]
+               .frequency
+               .exponentialRampToValueAtTime( note( midiNote + _r.transpose1 + currentBend ) + _r.tune1 , ctx.currentTime);
+            oscillators[midiNote][1]
+               .frequency
+               .exponentialRampToValueAtTime( note( midiNote + _r.transpose2 + currentBend ) + _r.tune2 , ctx.currentTime);
+            oscillators[midiNote][0].type = _r.waveform1;
+            oscillators[midiNote][1].type = _r.waveform2;
+         });
+      }
 
-			this.killAll = function() {
-				_.unmappedOscs.forEach( function(a){
-					a.stop();
-				});
-			}
+      this.killAll = function() {
+         _.unmappedOscs.forEach( function(a){
+            a.stop();
+         });
+      }
 
-			this.setDetune = function(tune) { 
-				currentBend = ((tune-64)/63.5)*pitchBendRange;
-				evokeOscillators();
-			}
-			this.setPitchBendRange = function(val) {
-				currentBend /= pitchBendRange;
-				props.pitchBendRange = pitchBendRange = Math.round(Math.min(12, Math.max(1, val)));
-				currentBend *= pitchBendRange;
-				evokeOscillators();
-			}
+      this.setDetune = function(tune) { 
+         currentBend = ( ( tune - 64 ) / 63.5 ) * _r.pitchBendRange; 
+         evokeOscillators();
+      }
+      this.setPitchBendRange = function(val) { 
+         currentBend /= _r.pitchBendRange;
+         _r.pitchBendRange = Math.round(Math.min(12, Math.max(1, val)));
+         currentBend *= _r.pitchBendRange;
+         evokeOscillators();
+      }
 
-			this.getActiveNotes = function() {
-				return activeNotes;
-			}
-			this.getOscillators = function() {
-				return oscillators;
-			}
+      this.getActiveNotes = function() {
+         return activeNotes;
+      }
+      this.getOscillators = function() {
+         return oscillators;
+      }
 
-			this.returnProps = function() {
-				return props;
-			}
+      this.returnProps = function() {
+         return _r;
+      }
+      // Oscillators
+      this.setGain1     = function ( val ) {
+         _r.gain1       = Math.round( Math.min(1    , Math.max( _r.gain1 + val   ,    0) ) *100) /100;
+         evokeOscillators(1);
+      }
+      this.setGain2     = function ( val ) {
+         _r.gain2       = Math.round( Math.min(1    , Math.max( _r.gain2 + val   ,    0) ) *100) /100;
+         evokeOscillators(1);
+      }
+      this.setTune1     = function ( val ) {
+         _r.tune1       = Math.round( Math.min(20   , Math.max( _r.tune1 + val   ,  -20) ) *100) /100;
+         evokeOscillators();
+      }
+      this.setTune2     = function ( val ) {
+         _r.tune2       = Math.round( Math.min(20   , Math.max( _r.tune2 + val   ,  -20) ) *100) /100;
+         evokeOscillators();
+      }
+      this.setTranpose1 = function ( val ) {
+         _r.transpose1  =             Math.min(24   , Math.max( Math.round(val)  ,  -24) );
+         evokeOscillators();
+      }
+      this.setTranpose2 = function ( val ) {
+         _r.transpose2  =             Math.min(24   , Math.max( Math.round(val)  ,  -24) );
+         evokeOscillators();
+      }
+      this.setWaveform1 = function ( val ) {
+         _r.waveform1   = val;
+         evokeOscillators();
+      }
+      this.setWaveform2 = function ( val ) {
+         _r.waveform2   = val;
+         evokeOscillators();
+      }
+      // Amplitude Envelope
+      this.setAttack    = function ( val ) {
+         _r.attack      = Math.round( Math.min(5000 , Math.max( _r.attack  + val ,    2) ) *100) /100;
+      }
+      this.setDecay     = function ( val ) {
+         _r.decay       = Math.round( Math.min(5000 , Math.max( _r.decay   + val , 0.01) ) *100) /100;
+      }
+      this.setSustain   = function ( val ) {
+         _r.sustain     = Math.round( Math.min(1    , Math.max( _r.sustain + val , 0.01) ) *100) /100;
+      }
+      this.setRelease   = function ( val ) {
+         _r.release     = Math.round( Math.min(5000 , Math.max( _r.release + val , 0.01) ) *100) /100;
+      }
+      this.setVelocity  = function ( val ) {
+         _r.velocity    = Math.round( Math.min(1    , Math.max( _r.velocity+ val ,    0) ) *100) /100;
+      }
+      // Filter Envelope
+      this.setfAttack   = function ( val ) {
+         _r.fattack     = Math.round( Math.min(5000 , Math.max( _r.fattack + val ,    1) ) *100) /100;
+      }
+      this.setfDecay    = function ( val ) {
+         _r.fdecay      = Math.round( Math.min(5000 , Math.max( _r.fdecay  + val ,    1) ) *100) /100;
+      }
+      this.setfSustain  = function ( val ) {
+         _r.fsustain    = Math.round( Math.min(1    , Math.max( _r.fsustain+ val , 0.01) ) *100) /100;
+      }
+      this.setfRelease  = function ( val ) {
+         _r.frelease    = Math.round( Math.min(5000 , Math.max( _r.frelease+ val ,    1) ) *100) /100;
+      }
+      this.setfAmount   = function ( val ) {
+         _r.famount     = Math.round( Math.min(1    , Math.max( _r.famount + val ,    0) ) *100) /100;
+      }
+      // Filter Properties
+      this.setfCut      = function ( val ) {
+         _r.fcut        = Math.round( Math.min(22500, Math.max( _r.fcut    + val ,   20) ) *100) /100;
+         activeNotes.forEach(function(fil) { 
+            filters[fil].frequency.exponentialRampToValueAtTime( _r.fcut, ctx.currentTime);
+         });
+      }
+      this.setfQ        = function ( val ) {
+         _r.fq          = Math.round( Math.min(30   , Math.max( _r.fq      + val , 0.01) ) *100) /100;
+         activeNotes.forEach(function(fil) { 
+            filters[fil].Q.value = _r.fq;
+         });
+      }
+      this.setfType     = function ( val ) {
+         _r.ftype       = val;
+         activeNotes.forEach(function(fil) { 
+            filters[fil].type = _r.ftype;
+         });
+      }
 
-			this.setGain1 = function(val) {
-				props.gain1 = gain1 = Math.min(1,Math.max(gain1+val,0));
-				evokeOscillators(1);
-			}
-			this.setTune1 = function(val) {
-				props.tune1 = tune1 = Math.min(20,Math.max(tune1+val,-20));
-				evokeOscillators();
-			}
-			this.setTranpose1 = function(val) {
-				props.transpose1 = transpose1 = Math.min(24,Math.max(Math.round(val),-24));
-				evokeOscillators();
-			}
-			this.setWaveform1 = function(val) {
-				props.waveform1 = wave1 = val;
-				evokeOscillators();
-			}
-			this.setGain2 = function(val) {
-				props.gain2 = gain2 = Math.min(1,Math.max(gain2+val,0));
-				evokeOscillators(1);
-			}
-			this.setTune2 = function(val) {
-				props.tune2 = tune2 = Math.min(20,Math.max(tune2+val,-20));
-				evokeOscillators();
-			}
-			this.setTranpose2 = function(val) {
-				props.transpose2 = transpose2 = Math.min(24,Math.max(Math.round(val),-24));
-				evokeOscillators();
-			}
-			this.setWaveform2 = function(val) {
-				props.waveform2 = wave2 = val;
-				evokeOscillators();
-			}
-			//aenv
-			this.setAttack = function(att) {
-				props.attack = attack = Math.min(5000,Math.max(attack+att,2));
-			}
+      this.playNote     = function ( midiNote , ga ) {
+         var osc1       = ctx.createOscillator();
+         var osc2       = ctx.createOscillator();
+         var osc1gain   = ctx.createGain();
+         var osc2gain   = ctx.createGain();
 
-			this.setDecay = function(dec) {
-				props.decay = decay = Math.min(5000,Math.max(decay+dec,0.0001));
-			}
+         var envelope   = ctx.createGain();
 
-			this.setSustain = function(sus) {
-				props.sustain = sustain = Math.min(1,Math.max(sustain+sus,0.0001));
-			}
+         var filter     = ctx.createBiquadFilter();
+         
+         osc1gain.gain.value  = ( _r.gain1/10 ) * ( (1-_r.velocity) + _r.velocity * (ga/127) );
+         osc2gain.gain.value  = ( _r.gain2/10 ) * ( (1-_r.velocity) + _r.velocity * (ga/127) );
 
-			this.setRelease = function(rel) {
-				props.release = release = Math.min(5000,Math.max(release+rel,0.0001));
-			}
-			this.setVelocity = function(vel) {
-				props.velocity = velocity = Math.min(1, Math.max(0, velocity+vel));
-			}
-			//fenv
-			this.setfAttack = function(att) {
-				props.fattack = fattack = Math.min(5000,Math.max(fattack+att,1));
-			}
+         osc1.frequency.value = note( midiNote + _r.transpose1 + currentBend ) + _r.tune1;
+         osc1.type            = _r.waveform1;
+         
+         osc2.frequency.value = note( midiNote + _r.transpose2 + currentBend ) + _r.tune2;
+         osc2.type            = _r.waveform2;
+         
+         envelope.gain.value  = 0;
 
-			this.setfDecay = function(dec) {
-				props.fdecay = fdecay = Math.min(5000,Math.max(fdecay+dec,1));
-			}
+         filter.frequency.value  = _r.fcut;
+         filter.Q.value          = _r.fq;
+         filter.type             = _r.ftype;
 
-			this.setfSustain = function(sus) {
-				props.fsustain = fsustain = Math.min(1,Math.max(fsustain+sus,0.001));
-			}
+         osc1     .connect(osc1gain);
+         osc2     .connect(osc2gain);
+         osc1gain .connect(envelope);
+         osc2gain .connect(envelope);
+         envelope .connect(filter  );
+         filter   .connect(out     );
 
-			this.setfRelease = function(rel) {
-				props.frelease = frelease = Math.min(5000,Math.max(frelease+rel,1));
-			}
-			this.setfCut = function(cut) {
-				props.fcut = fcut = Math.min(22500, Math.max(20, fcut+cut));
-				activeNotes.forEach(function(fil) { 
-					filters[fil].frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime);
-				});
-			}
-			this.setfQ = function(q) {
-				props.fq = fq = Math.min(30, Math.max(0.01, fq+q));
-				activeNotes.forEach(function(fil) { 
-					filters[fil].Q.value = fq;
-				});
-			}
-			this.setfType = function(typ) {
-				props.ftype = ftype = typ;
-				activeNotes.forEach(function(fil) { 
-					filters[fil].type = typ;
-				});
-			}
-			this.setfAmount= function(amt) {
-				props.famount = famount = Math.min(1,Math.max(0,famount + amt));
-			}
+         osc1.start();
+         osc2.start();
 
-			this.playNote = function(midi, ga){
-				var osc1 = ctx.createOscillator();
-				var osc2 = ctx.createOscillator();
-				var osc1gain = ctx.createGain();
-				var osc2gain = ctx.createGain();
+         // Amplitude Envelope
+            // Attack
+            envelope.gain
+               .exponentialRampToValueAtTime(0.001       , ctx.currentTime                 );
+            envelope.gain
+               .exponentialRampToValueAtTime(1           , ctx.currentTime + (_r.attack/1000) );
+            // Decay & Sustain
+            envelope.gain
+               .exponentialRampToValueAtTime(_r.sustain  , ctx.currentTime + (_r.attack/1000) + (_r.decay/1000) );
 
-				var envelope = ctx.createGain();
+         // Filter Envelope
+            // Filter Attack 
+            filter.frequency
+               .exponentialRampToValueAtTime(_r.fcut                                , ctx.currentTime                     );
+            filter.frequency
+               .exponentialRampToValueAtTime(_r.fcut + _r.famount            *22500 , ctx.currentTime + (_r.fattack/1000) );
+            // Filter Decay & Sustain
+            filter.frequency
+               .exponentialRampToValueAtTime(_r.fcut + _r.fsustain*_r.famount*22500 , ctx.currentTime + (_r.fattack/1000) + (_r.fdecay/1000) );
 
-				var filter = ctx.createBiquadFilter();
-				
-				filter.frequency.value = fcut;
-				filter.Q.value = fq;
-				filter.type = ftype;
+         oscillators[midiNote]      = []        ;
+         oscillators[midiNote][0]   = osc1      ;
+         oscillators[midiNote][1]   = osc2      ;
 
-				envelope.gain.value = 0;
-				osc1gain.gain.value = (gain1/10)*((1-velocity) + velocity*(ga/127));
-				osc2gain.gain.value = (gain2/10)*((1-velocity) + velocity*(ga/127));
+         gains[midiNote]            = []        ;
+         gains[midiNote][0]         = osc1gain  ;
+         gains[midiNote][1]         = osc2gain  ;
 
-				osc1.frequency.value = note(midi + transpose1 + currentBend) + tune1;
-				osc1.type = wave1;
-				
-				osc2.frequency.value = note(midi + transpose2 + currentBend) + tune2;
-				osc2.type = wave2;
+         envelopes[midiNote]        = envelope  ;
+         filters[midiNote]          = filter    ;
+         
+         _.unmappedOscs .push( osc1, osc2);
+         activeNotes    .push( midiNote  );
+      }
 
-				osc1.connect(osc1gain);
-				osc2.connect(osc2gain);
-				osc1gain.connect(envelope);
-				osc2gain.connect(envelope);
-				osc1.start();
-				osc2.start();
+      this.killNote     = function ( midiNote ) {
+         
+         // Amplitude Release
+         // envelopes[midiNote].gain.exponentialRampToValueAtTime(sustain, ctx.currentTime);
+         envelopes[midiNote].gain
+            .exponentialRampToValueAtTime(0.001    , ctx.currentTime + (_r.release/1000) );
 
-				envelope.connect(filter);
-				filter.connect(out);
-				// Attack
-				envelope.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime);
-				envelope.gain.exponentialRampToValueAtTime(1, ctx.currentTime + (attack/1000));
-				// Decay & Sustain
-				envelope.gain.exponentialRampToValueAtTime(sustain, ctx.currentTime + (attack/1000) + (decay/1000));
-				//Velocity
+         // Filter Release
+         filters[midiNote].frequency
+            .exponentialRampToValueAtTime(filters[midiNote].frequency.value   , ctx.currentTime );
+         filters[midiNote].frequency
+            .exponentialRampToValueAtTime(_r.fcut                             , ctx.currentTime + (_r.frelease/1000) );
+         
+         oscillators[midiNote][0].stop( ctx.currentTime + (_r.release/1000) );
+         oscillators[midiNote][1].stop( ctx.currentTime + (_r.release/1000) );
+         
+         oscillators[midiNote]      = 
+         oscillators[midiNote][0]   = 
+         oscillators[midiNote][1]   = 
+         gains[midiNote]            =
+         filters[midiNote]          = undefined;
 
-				// Fattack 
-				filter.frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime);
-				filter.frequency.exponentialRampToValueAtTime(fcut+famount*22500, ctx.currentTime + (fattack/1000));
-				// Filter Decay & Sustain
-				filter.frequency.exponentialRampToValueAtTime(fcut+fsustain*famount*22500, ctx.currentTime + (fattack/1000) + (fdecay/1000));
-
-				envelopes[midi] = envelope;
-				filters[midi] = filter;
-				oscillators[midi] = [];
-				oscillators[midi][0] = osc1;
-				oscillators[midi][1] = osc2;
-				gains[midi] = [];
-				gains[midi][0] = osc1gain;
-				gains[midi][1] = osc2gain;
-				this.unmappedOscs.push(osc1,osc2);
-				activeNotes.push(midi);
-			}
-
-			this.killNote = function(midi) {
-				
-				// Release
-				//envelopes[midi].gain.exponentialRampToValueAtTime(sustain, ctx.currentTime);
-				envelopes[midi].gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (release/1000));
-
-				//FilterRelease
-				filters[midi].frequency.exponentialRampToValueAtTime(filters[midi].frequency.value, ctx.currentTime);
-				filters[midi].frequency.exponentialRampToValueAtTime(fcut, ctx.currentTime + (frelease/1000));
-				
-				oscillators[midi][0].stop(ctx.currentTime + (release/1000));
-				oscillators[midi][1].stop(ctx.currentTime + (release/1000));
-				
-				oscillators[midi] = 
-				oscillators[midi][0] = 
-				oscillators[midi][1] = 
-				gains[midi] =
-				filters[midi]= undefined;
-				activeNotes.forEach( function(note) {
-					if(note == midi) {
-
-						activeNotes.splice(activeNotes.indexOf(midi),1);
-						//oscillators.splice(oscillators.indexOf(midi),1);
-						//gains.splice(gains.indexOf(midi),1);
-					}
-				});	
-			
-			}
-		return this;
-	}
-
-
-	var aC = new AudioContext();
-
-	var synth = new Synth(aC, aC.destination, {
-		velocity  	: 1,
-		gain1		: 0.45,
-		transpose1	: 0,
-		tune1 		: 0 ,
-		waveform1 	: 'sawtooth',
-		gain2 		: 0.45,
-		transpose2  : 7,
-		tune2 		: 0,
-		waveform2 	: 'sawtooth',
-		attack 		: 3,
-		decay 		: 1000,
-		sustain     : 0.3, 
-		release 	: 260,
-		fattack 	: 10,
-		fdecay		: 220,
-		fsustain 	: 0.4,
-		frelease 	: 680,
-		fcut 		: 200,
-		fq 			: 8,
-		famount 	: 0.5,
-		ftype 		: 'lowpass',
-		pitchBendRange: 12
-	});
-
-	//indicator
-	var indicators = [];
-	"¯¯¯¯¯¯¯¯¯¯¯¯".split("").forEach(function(indi,index,all) {
-		var el = d.createElement("span");
-		el.style.color = "hsla("+index*30+",100%,90%,1)";
-		el.textContent = indi;
-		indicators.push(el);
-		d.getElementById("indicator").appendChild(el);
-		setTimeout(function() {
-			el.style.top = "-10px";
-		},100*index);
-		setTimeout(function() {
-			el.style.top = "0px";
-		},400+100*index);
-	});
-
-	MIDI.on("any", function(m,e) { 
-
-		function test(val) {
-			if 		( val >= 128 && val < 144) { return 'noteoff'; }
-			else if ( val >= 144 && val < 160) { return 'noteon' ; }
-			else if ( val >= 224 && val < 240) { return 'pbend' ;  }
-		}
-
-		switch(test(e.data[0])) {
-			case 'noteon':
-				synth.playNote(e.data[1], e.data[2]);
-				indicators[e.data[1]%12].style.top = "-"+10*(e.data[2])/127+"px";
-				break;
-			case 'noteoff':
-				synth.killNote(e.data[1], e.data[2]);
-				indicators[e.data[1]%12].style.top = "0px";
-				break;
-			case 'pbend':
-				synth.setDetune(e.data[2]);
-				break;
-		};
-	});
-
-	//Vibrato
-	var VIBRATO_RATE = 7,
-		VIBRATO_DEPTH= 50;
-	setInterval( function() {
-		(synth.unmappedOscs).forEach(function(osc) {
-			//if (!osc) return;
-			osc.detune.value = 0.001+VIBRATO_DEPTH*Math.sin(Date.now()/1000*VIBRATO_RATE*Math.PI*2);
-		})
-	},1);
+         activeNotes.forEach( function(note) {
+            if(note == midiNote) {
+               activeNotes.splice(activeNotes.indexOf(midiNote),1);
+               //oscillators.splice(oscillators.indexOf(midiNote),1);
+               //gains.splice(gains.indexOf(midiNote),1);
+            }
+         });
+      
+      }
+      return this;
+   }
 
 
-	function updateSlider(element, value, displayText) {
-		element.textContent = displayText;
-		element.style.width = value*100 + "%";
-	}
+   var aC    = new AudioContext();
 
-	function updateSignedSlider(element,value,displayText) {
-		element.textContent = displayText;
-		element.style.width = Math.abs(value)*100 + "%";
-		element.style.left 	= (value >=0)? "50%" : (50-Math.abs(value)*100)+"%";
-	}
+   var synth = new Synth(aC, aC.destination, {
+      velocity    : 1,
+      gain1       : 0.45,
+      transpose1  : 0,
+      tune1       : 0 ,
+      waveform1   : 'sawtooth',
+      gain2       : 0.45,
+      transpose2  : 7,
+      tune2       : 0,
+      waveform2   : 'sawtooth',
+      attack      : 3,
+      decay       : 1000,
+      sustain     : 0.3, 
+      release     : 260,
+      fattack     : 10,
+      fdecay      : 220,
+      fsustain    : 0.4,
+      frelease    : 680,
+      fcut        : 200,
+      fq          : 8,
+      famount     : 0.5,
+      ftype       : 'lowpass',
+      pitchBendRange: 12
+   });
 
-	function listenSlider(element, processor) {
-		element.addEventListener("mousemove", function(e) {
-			if(e.buttons == 1) {
-				processor(e);
-			}
-		});
-	}
+   // Indicator Initiation
+   var indicators = [];
+   "¯¯¯¯¯¯¯¯¯¯¯¯".split("")
+      .forEach( function ( indi , i , all ) {
+         var el             = d.createElement("span");
+             el.style.color = "hsla("+i*30+", 100%, 90%, 1)";
+             el.textContent = indi;
+         indicators.push(el);
+         d.getElementById("indicator").appendChild(el);
 
-	
+         setTimeout( function() {
+            el.style.top = "-10px";
+         },       100*i);
+         setTimeout( function() {
+            el.style.top = "0px"  ;
+         }, 400 + 100*i);
+      });
 
-	var waveforms = ['sine', 'triangle', 'sawtooth', 'square'];
-	var FILTER_TYPES = ["lowpass", "highpass","bandpass"];
-	var	OSC1VOL = d.getElementById("osc1vol"),
-		OSC1TUN = d.getElementById("osc1tun"),
-		OSC1SEM = d.getElementById("osc1sem"),
-		OSC1WAV = d.getElementById("osc1wav"),
-		OSC2VOL = d.getElementById("osc2vol"),
-		OSC2TUN = d.getElementById("osc2tun"),
-		OSC2SEM = d.getElementById("osc2sem"),
-		OSC2WAV = d.getElementById("osc2wav");
-	var AMPATT 	= d.getElementById("ampatt"),
-		AMPDEC 	= d.getElementById("ampdec"),
-		AMPSUS 	= d.getElementById("ampsus"),
-		AMPREL 	= d.getElementById("amprel"),
-		AMPVEL 	= d.getElementById("ampvel");
-	var UI_WAV1 = 0,
-		UI_SEM1 = 0,
-		UI_WAV2 = 0,
-		UI_SEM2 = 0;
-	//Vibrato
-	var UI_VIBR_DEPTH = d.getElementById("vibratoDepth"),
-		UI_VIBR_RATE  = d.getElementById("vibratoRate"),
-		BENDRANGE 	  = d.getElementById("bendRange");
-		UI_BEND = 12;
-	//filter
-	var FILATT 	= d.getElementById("filatt"),
-		FILDEC 	= d.getElementById("fildec"),
-		FILSUS 	= d.getElementById("filsus"),
-		FILREL 	= d.getElementById("filrel"),
-		FILCUT 	= d.getElementById("filcut"),
-		FILRES 	= d.getElementById("filres"),
-		FILAMT 	= d.getElementById("filamt"),
-		FILTYP 	= d.getElementById("filtyp"),
-		UI_FTYP  = 0;
-	
-	//init UI
-	function evokeUISettings() {
-		var synthSettings = synth.returnProps();
+   // MIDI Listener
+   MIDI.on("any", function ( m , e ) { 
+      function test ( val ) {
+         if       ( val >= 128 && val < 144) { return 'noteoff'; }
+         else if  ( val >= 144 && val < 160) { return 'noteon' ; }
+         else if  ( val >= 224 && val < 240) { return 'pbend'  ; }
+      }
 
-		updateSlider(OSC1VOL, synthSettings.gain1		, synthSettings.gain1*100+"%");
-		updateSignedSlider(OSC1TUN, synthSettings.tune1/40 		, synthSettings.tune1);
-		updateSignedSlider(OSC1SEM, synthSettings.transpose1/48 , synthSettings.transpose1 );
-		updateSlider(OSC1WAV, waveforms.indexOf(synthSettings.waveform1)/3, synthSettings.waveform1 );
-		UI_SEM1 = synthSettings.transpose1;
-		UI_WAV1 = waveforms.indexOf(synthSettings.waveform1);
-		updateSlider(OSC2VOL, synthSettings.gain2		, synthSettings.gain2*100+"%");
-		updateSignedSlider(OSC2TUN, synthSettings.tune2/40 		, synthSettings.tune2);
-		updateSignedSlider(OSC2SEM, synthSettings.transpose2/48 , synthSettings.transpose2 );
-		updateSlider(OSC2WAV, waveforms.indexOf(synthSettings.waveform2)/3, synthSettings.waveform2 );
-		UI_SEM2 = synthSettings.transpose2;
-		UI_WAV2 = waveforms.indexOf(synthSettings.waveform2);
-		
-		updateSlider(AMPATT, synthSettings.attack/5000, synthSettings.attack+"ms");
-		updateSlider(AMPDEC, synthSettings.decay/5000, synthSettings.decay+"ms");
-		updateSlider(AMPSUS, synthSettings.sustain/1, synthSettings.sustain*100+"%");
-		updateSlider(AMPREL, synthSettings.release/5000, synthSettings.release+"ms");
-		updateSlider(AMPVEL, synthSettings.velocity/1, synthSettings.velocity*100+"%");
+      switch( test( e.data[0] ) ) {
+         case 'noteon':
+            synth.playNote( e.data[1] , e.data[2] );
+            indicators[ e.data[1]%12 ].style.top = "-" + 10*(e.data[2])/127 +"px";
+            break;
+         case 'noteoff':
+            synth.killNote( e.data[1] , e.data[2] );
+            indicators[ e.data[1]%12 ].style.top = "0px";
+            break;
+         case 'pbend':
+            synth.setDetune( e.data[2] );
+            break;
+      };
+   });
 
-		updateSlider(FILATT, synthSettings.fattack/5000, synthSettings.fattack+"ms");
-		updateSlider(FILDEC, synthSettings.fdecay/5000, synthSettings.fdecay+"ms");
-		updateSlider(FILSUS, synthSettings.fsustain/1, synthSettings.fsustain*100+"%");
-		updateSlider(FILREL, synthSettings.frelease/5000, synthSettings.frelease+"ms");
+   //Vibrato
+   var   VIBRATO_RATE = 7,
+         VIBRATO_DEPTH= 50;
+   setInterval( function() {
+      (synth.unmappedOscs).forEach( function ( osc ) {
+         //if (!osc) return;
+         osc.detune.value = VIBRATO_DEPTH *Math.sin( 2*Math.PI *VIBRATO_RATE *Date.now()/1000);
+      })
+   }, 1);
 
-		updateSlider(FILCUT, synthSettings.fcut/22480, Math.round(synthSettings.fcut)+"Hz");
-		updateSlider(FILRES, synthSettings.fq/30, Math.round(synthSettings.fq)+"");
-		updateSlider(FILAMT, synthSettings.famount/1, Math.round(synthSettings.famount*1000)/10+"%");
-		updateSlider(FILTYP, FILTER_TYPES.indexOf(synthSettings.ftype)/2, synthSettings.ftype );
-		UI_FTYP = FILTER_TYPES.indexOf(synthSettings.ftype);
+   // UI Functions
+   function updateSlider         ( element , value , displayText ) {
+      element.textContent = displayText;
+      element.style.width = value*100 + "%";
+   }
 
-		updateSlider(UI_VIBR_DEPTH, VIBRATO_DEPTH/200, VIBRATO_DEPTH+"¢");
-		updateSlider(UI_VIBR_RATE, VIBRATO_RATE/20, VIBRATO_RATE+"Hz");
-		updateSlider(BENDRANGE, synthSettings.pitchBendRange/12, synthSettings.pitchBendRange+"smts");
-	}
-	evokeUISettings();
+   function updateSignedSlider   ( element , value , displayText ) {
+      element.textContent = displayText;
+      element.style.width = Math.abs(value)*100 + "%";
+      element.style.left  = (value >=0)? "50%" : (50-Math.abs(value)*100)+"%";
+   }
 
-	//osc1
-	listenSlider(OSC1VOL.parentNode, function(e) { 
-		synth.setGain1(e.movementX/250);
-		updateSlider(OSC1VOL, synth.returnProps().gain1		, Math.round(synth.returnProps().gain1*100)+"%");
-	});
-	listenSlider(OSC1TUN.parentNode, function(e) { 
-		synth.setTune1(e.movementX/5);
-		updateSignedSlider(OSC1TUN, synth.returnProps().tune1/40		, Math.round(synth.returnProps().tune1));
-	});
-	listenSlider(OSC1SEM.parentNode, function(e) { 
-		UI_SEM1 += Math.min(1,Math.max(-1,e.movementX))/3;
-		synth.setTranpose1(UI_SEM1);
-		updateSignedSlider(OSC1SEM, synth.returnProps().transpose1/48	, synth.returnProps().transpose1);
-	});
-	listenSlider(OSC1WAV.parentNode, function(e) { 
-		UI_WAV1 += e.movementX/50;
-		UI_WAV1 = Math.min(3,Math.max(0,UI_WAV1));
-		synth.setWaveform1(waveforms[Math.floor(UI_WAV1)]);
-		updateSlider(OSC1WAV, waveforms.indexOf(synth.returnProps().waveform1)/3	, synth.returnProps().waveform1);
-	});
-	//osc2
-	listenSlider(OSC2VOL.parentNode, function(e) { 
-		synth.setGain2(e.movementX/250);
-		updateSlider(OSC2VOL, synth.returnProps().gain2		, Math.round(synth.returnProps().gain2*100)+"%");
-	});
-	listenSlider(OSC2TUN.parentNode, function(e) { 
-		synth.setTune2(e.movementX/5);
-		updateSignedSlider(OSC2TUN, synth.returnProps().tune2/40		, Math.round(synth.returnProps().tune2));
-	});
-	listenSlider(OSC2SEM.parentNode, function(e) { 
-		UI_SEM2 += Math.min(1,Math.max(-1,e.movementX))/3;
-		synth.setTranpose2(UI_SEM2);
-		updateSignedSlider(OSC2SEM, synth.returnProps().transpose2/48	, synth.returnProps().transpose2);
-	});
-	listenSlider(OSC2WAV.parentNode, function(e) { 
-		UI_WAV2 += e.movementX/50;
-		UI_WAV2 = Math.min(3,Math.max(0,UI_WAV2));
-		synth.setWaveform2(waveforms[Math.floor(UI_WAV2)]);
-		updateSlider(OSC2WAV, waveforms.indexOf(synth.returnProps().waveform2)/3	, synth.returnProps().waveform2);
-	});
-	//ampenv
-	listenSlider(AMPATT.parentNode, function(e) {
-		synth.setAttack(e.movementX*20);
-		updateSlider(AMPATT, synth.returnProps().attack/5000, Math.round(synth.returnProps().attack)+"ms");
-	});
-	listenSlider(AMPDEC.parentNode, function(e) {
-		synth.setDecay(e.movementX*20);
-		updateSlider(AMPDEC, synth.returnProps().decay/5000, Math.round(synth.returnProps().decay)+"ms");
-	});
-	listenSlider(AMPSUS.parentNode, function(e) {
-		synth.setSustain(e.movementX/200);
-		updateSlider(AMPSUS, synth.returnProps().sustain/1, Math.round(synth.returnProps().sustain*100)+"%");
-	});
-	listenSlider(AMPREL.parentNode, function(e) {
-		synth.setRelease(e.movementX*20);
-		updateSlider(AMPREL, synth.returnProps().release/5000, Math.round(synth.returnProps().release)+"ms");
-	});
-	listenSlider(AMPVEL.parentNode, function(e) {
-		synth.setVelocity(e.movementX/200);
-		updateSlider(AMPVEL, synth.returnProps().velocity/1, Math.round(synth.returnProps().velocity*100)+"%");
-	});
-	//filenv
-	listenSlider(FILATT.parentNode, function(e) {
-		synth.setfAttack(e.movementX*20);
-		updateSlider(FILATT, synth.returnProps().fattack/5000, Math.round(synth.returnProps().fattack)+"ms");
-	});
-	listenSlider(FILDEC.parentNode, function(e) {
-		synth.setfDecay(e.movementX*20);
-		updateSlider(FILDEC, synth.returnProps().fdecay/5000, Math.round(synth.returnProps().fdecay)+"ms");
-	});
-	listenSlider(FILSUS.parentNode, function(e) {
-		synth.setfSustain(e.movementX/200);
-		updateSlider(FILSUS, synth.returnProps().fsustain/1, Math.round(synth.returnProps().fsustain*100)+"%");
-	});
-	listenSlider(FILREL.parentNode, function(e) {
-		synth.setfRelease(e.movementX*20);
-		updateSlider(FILREL, synth.returnProps().frelease/5000, Math.round(synth.returnProps().frelease)+"ms");
-	});
-	//filsettings
-	listenSlider(FILCUT.parentNode, function(e) {
-		synth.setfCut(e.movementX*synth.returnProps().fcut/30);
-		updateSlider(FILCUT, Math.pow((synth.returnProps().fcut-20)/22480,1/3), Math.round(synth.returnProps().fcut)+"Hz");
-	});
-	listenSlider(FILRES.parentNode, function(e) {
-		synth.setfQ(e.movementX/3);
-		updateSlider(FILRES, synth.returnProps().fq/30, Math.round(synth.returnProps().fq));
-	});
-	listenSlider(FILAMT.parentNode, function(e) {
-		synth.setfAmount(e.movementX/150);
-		updateSlider(FILAMT, synth.returnProps().famount/1, Math.round(synth.returnProps().famount*1000)/10+"%");
-	});
-	listenSlider(FILTYP.parentNode, function(e) {
-		UI_FTYP = Math.min(2, Math.max(0,UI_FTYP+e.movementX/32));
-		synth.setfType(FILTER_TYPES[Math.floor(UI_FTYP)]);
-		updateSlider(FILTYP, FILTER_TYPES.indexOf(synth.returnProps().ftype)/2, synth.returnProps().ftype );
-	})
+   function listenSlider(element, processor) {
+      element.addEventListener("mousemove", function(e) {
+         if(e.buttons == 1) {
+            processor(e);
+         }
+      });
+   }
 
-	//vibrato 
-	listenSlider(UI_VIBR_DEPTH.parentNode, function(e) {
-		VIBRATO_DEPTH = Math.min(200, Math.max(0, VIBRATO_DEPTH+e.movementX*2));
-		updateSlider(UI_VIBR_DEPTH, VIBRATO_DEPTH/200, VIBRATO_DEPTH+"¢");
-	});
-	listenSlider(UI_VIBR_RATE.parentNode, function(e) {
-		VIBRATO_RATE = Math.min(20, Math.max(0.1, VIBRATO_RATE+e.movementX/10));
-		updateSlider(UI_VIBR_RATE, VIBRATO_RATE/20, Math.round(VIBRATO_RATE*10)/10+"Hz");
-	});
-	listenSlider(BENDRANGE.parentNode, function(e) {
-		UI_BEND += e.movementX/6;
-		synth.setPitchBendRange(UI_BEND);
-		updateSlider(BENDRANGE, synth.returnProps().pitchBendRange/12, synth.returnProps().pitchBendRange+"smts");
-	});
+   
+   // Data Tables
+   var waveforms     = ['sine', 'triangle', 'sawtooth', 'square'];
+   var FILTER_TYPES  = ["lowpass", "highpass","bandpass"];
+
+   // UI Elements
+   var   OSC1VOL = d.getElementById("osc1vol"),
+         OSC1TUN = d.getElementById("osc1tun"),
+         OSC1SEM = d.getElementById("osc1sem"),
+         OSC1WAV = d.getElementById("osc1wav"),
+         OSC2VOL = d.getElementById("osc2vol"),
+         OSC2TUN = d.getElementById("osc2tun"),
+         OSC2SEM = d.getElementById("osc2sem"),
+         OSC2WAV = d.getElementById("osc2wav");
+   var   AMPATT  = d.getElementById("ampatt"),
+         AMPDEC  = d.getElementById("ampdec"),
+         AMPSUS  = d.getElementById("ampsus"),
+         AMPREL  = d.getElementById("amprel"),
+         AMPVEL  = d.getElementById("ampvel");
+   var   UI_VIBR_DEPTH = d.getElementById("vibratoDepth"),
+         UI_VIBR_RATE  = d.getElementById("vibratoRate") ,
+         BENDRANGE     = d.getElementById("bendRange")   ;
+   var   FILATT    = d.getElementById("filatt"),
+         FILDEC    = d.getElementById("fildec"),
+         FILSUS    = d.getElementById("filsus"),
+         FILREL    = d.getElementById("filrel"),
+         FILCUT    = d.getElementById("filcut"),
+         FILRES    = d.getElementById("filres"),
+         FILAMT    = d.getElementById("filamt"),
+         FILTYP    = d.getElementById("filtyp");
+         
+   // For integers and non-numerical values
+   var   UI_WAV1 = 0,
+         UI_SEM1 = 0,
+         UI_WAV2 = 0,
+         UI_SEM2 = 0,
+         UI_BEND = 12,
+         UI_FTYP = 0;
+   
+   //init UI
+   function evokeUISettings() {
+      var synthSettings = synth.returnProps();
+
+      // Evoke values for integers non-numerical values
+      UI_SEM1 = synthSettings.transpose1;
+      UI_WAV1 = waveforms.indexOf(synthSettings.waveform1);
+      UI_SEM2 = synthSettings.transpose2;
+      UI_WAV2 = waveforms.indexOf(synthSettings.waveform2);
+      UI_FTYP = FILTER_TYPES.indexOf(synthSettings.ftype);
+
+      updateSlider      (OSC1VOL, synthSettings.gain1                         , synthSettings.gain1   *100  + "%");
+      updateSignedSlider(OSC1TUN, synthSettings.tune1     /40                 , synthSettings.tune1              );
+      updateSignedSlider(OSC1SEM, synthSettings.transpose1/48                 , synthSettings.transpose1         );
+      updateSlider      (OSC1WAV, waveforms.indexOf(synthSettings.waveform1)/3, synthSettings.waveform1          );
+
+      updateSlider      (OSC2VOL, synthSettings.gain2                         , synthSettings.gain2   *100  + "%");
+      updateSignedSlider(OSC2TUN, synthSettings.tune2     /40                 , synthSettings.tune2              );
+      updateSignedSlider(OSC2SEM, synthSettings.transpose2/48                 , synthSettings.transpose2         );
+      updateSlider      (OSC2WAV, waveforms.indexOf(synthSettings.waveform2)/3, synthSettings.waveform2          );
+      
+      updateSlider      (AMPATT , synthSettings.attack   /5000                , synthSettings.attack        +"ms");
+      updateSlider      (AMPDEC , synthSettings.decay    /5000                , synthSettings.decay         +"ms");
+      updateSlider      (AMPSUS , synthSettings.sustain                       , synthSettings.sustain *100  + "%");
+      updateSlider      (AMPREL , synthSettings.release  /5000                , synthSettings.release       +"ms");
+      updateSlider      (AMPVEL , synthSettings.velocity                      , synthSettings.velocity*100  + "%");
+
+      updateSlider      (FILATT , synthSettings.fattack  /5000                , synthSettings.fattack       +"ms");
+      updateSlider      (FILDEC , synthSettings.fdecay   /5000                , synthSettings.fdecay        +"ms");
+      updateSlider      (FILSUS , synthSettings.fsustain /1                   , synthSettings.fsustain*100  + "%");
+      updateSlider      (FILREL , synthSettings.frelease /5000                , synthSettings.frelease      +"ms");
+
+      updateSlider      (FILCUT , synthSettings.fcut     /22480               , synthSettings.fcut          +"Hz");
+      updateSlider      (FILRES , synthSettings.fq       /30                  , synthSettings.fq                 );
+      updateSlider      (FILAMT , synthSettings.famount                       , synthSettings.famount       + "%");
+      updateSlider      (FILTYP , FILTER_TYPES.indexOf(synthSettings.ftype)/2 , synthSettings.ftype              );
+
+      updateSlider      (UI_VIBR_DEPTH, VIBRATO_DEPTH    /200                 , VIBRATO_DEPTH               + "¢");
+      updateSlider      (UI_VIBR_RATE , VIBRATO_RATE     /20                  , VIBRATO_RATE                +"Hz");
+      updateSlider      (BENDRANGE    , synthSettings.pitchBendRange/12       , synthSettings.pitchBendRange+"smts");
+   }
+   evokeUISettings();
+
+   // OSC 1
+   listenSlider( OSC1VOL.parentNode, function(e) { 
+      synth.setGain1    ( e.movementX /250);
+      updateSlider      (OSC1VOL, synth.returnProps().gain1                         , synth.returnProps().gain1*100   + "%");
+   });
+   listenSlider( OSC1TUN.parentNode, function(e) { 
+      synth.setTune1    ( e.movementX /5  );
+      updateSignedSlider(OSC1TUN, synth.returnProps().tune1/40                      , synth.returnProps().tune1            );
+   });
+   listenSlider( OSC1SEM.parentNode, function(e) { 
+      UI_SEM1 += Math.min(1 , Math.max(-1, e.movementX) ) /3;
+      synth.setTranpose1(UI_SEM1);
+      updateSignedSlider(OSC1SEM, synth.returnProps().transpose1/48                 , synth.returnProps().transpose1       );
+   });
+   listenSlider( OSC1WAV.parentNode, function(e) { 
+      UI_WAV1 += e.movementX/50;
+      UI_WAV1  = Math.min(3 , Math.max(0, UI_WAV1) );
+      synth.setWaveform1( waveforms[Math.floor(UI_WAV1)] );
+      updateSlider      (OSC1WAV, waveforms.indexOf(synth.returnProps().waveform1)/3, synth.returnProps().waveform1        );
+   });
+   // OSC 2
+   listenSlider(OSC2VOL.parentNode, function(e) { 
+      synth.setGain2    ( e.movementX /250 );
+      updateSlider      (OSC2VOL, synth.returnProps().gain2                         , synth.returnProps().gain2*100   + "%");
+   });
+   listenSlider(OSC2TUN.parentNode, function(e) { 
+      synth.setTune2    ( e.movementX /5 );
+      updateSignedSlider(OSC2TUN, synth.returnProps().tune2/40                      , synth.returnProps().tune2            );
+   });
+   listenSlider(OSC2SEM.parentNode, function(e) { 
+      UI_SEM2 += Math.min(1 , Math.max(-1, e.movementX) ) /3;
+      synth.setTranpose2( UI_SEM2 );
+      updateSignedSlider(OSC2SEM, synth.returnProps().transpose2/48                 , synth.returnProps().transpose2       );
+   });
+   listenSlider(OSC2WAV.parentNode, function(e) { 
+      UI_WAV2 += e.movementX/50;
+      UI_WAV2 = Math.min(3,Math.max(0,UI_WAV2));
+      synth.setWaveform2( waveforms[Math.floor(UI_WAV2)] );
+      updateSlider      (OSC2WAV, waveforms.indexOf(synth.returnProps().waveform2)/3, synth.returnProps().waveform2        );
+   });
+   // Amplitude Envelopes
+   listenSlider(AMPATT.parentNode, function(e) {
+      synth.setAttack   ( e.movementX *20 );
+      updateSlider      (AMPATT, synth.returnProps().attack/5000                    , synth.returnProps().attack      +"ms");
+   });
+   listenSlider(AMPDEC.parentNode, function(e) {
+      synth.setDecay    ( e.movementX *20 );
+      updateSlider      (AMPDEC, synth.returnProps().decay/5000                     , synth.returnProps().decay       +"ms");
+   });
+   listenSlider(AMPSUS.parentNode, function(e) {
+      synth.setSustain  ( e.movementX /200 );
+      updateSlider      (AMPSUS, synth.returnProps().sustain                        , synth.returnProps().sustain*100 + "%");
+   });
+   listenSlider(AMPREL.parentNode, function(e) {
+      synth.setRelease  ( e.movementX *20  );
+      updateSlider      (AMPREL, synth.returnProps().release/5000                   , synth.returnProps().release     +"ms");
+   });
+   listenSlider(AMPVEL.parentNode, function(e) {
+      synth.setVelocity ( e.movementX /200 );
+      updateSlider      (AMPVEL, synth.returnProps().velocity                       , synth.returnProps().velocity*100+ "%");
+   });
+   // Filter Envelopes
+   listenSlider(FILATT.parentNode, function(e) {
+      synth.setfAttack  ( e.movementX*20 );
+      updateSlider      (FILATT, synth.returnProps().fattack/5000                   , synth.returnProps().fattack     +"ms");
+   });
+   listenSlider(FILDEC.parentNode, function(e) {
+      synth.setfDecay   ( e.movementX*20 );
+      updateSlider      (FILDEC, synth.returnProps().fdecay/5000                    , synth.returnProps().fdecay      +"ms");
+   });
+   listenSlider(FILSUS.parentNode, function(e) {
+      synth.setfSustain ( e.movementX/200 );
+      updateSlider      (FILSUS, synth.returnProps().fsustain                       , synth.returnProps().fsustain*100+ "%");
+   });
+   listenSlider(FILREL.parentNode, function(e) {
+      synth.setfRelease ( e.movementX*20 );
+      updateSlider      (FILREL, synth.returnProps().frelease/5000                  , synth.returnProps().frelease    +"ms");
+   });
+   // Filter Settings
+   listenSlider(FILCUT.parentNode, function(e) {
+      synth.setfCut     ( e.movementX*synth.returnProps().fcut /30);
+      updateSlider      (FILCUT, Math.pow((synth.returnProps().fcut-20)/22480,1/3)  , synth.returnProps().fcut        +"Hz");
+   });
+   listenSlider(FILRES.parentNode, function(e) {
+      synth.setfQ       ( e.movementX /3 );
+      updateSlider      (FILRES, synth.returnProps().fq/30                          , synth.returnProps().fq               );
+   });
+   listenSlider(FILAMT.parentNode, function(e) {
+      synth.setfAmount  ( e.movementX /150 );
+      updateSlider      (FILAMT, synth.returnProps().famount                        , synth.returnProps().famount*100  +"%");
+   });
+   listenSlider(FILTYP.parentNode, function(e) {
+      UI_FTYP = Math.min(2, Math.max(0, UI_FTYP + e.movementX /32) );
+      synth.setfType    (FILTER_TYPES[Math.floor(UI_FTYP)]);
+      updateSlider      (FILTYP, FILTER_TYPES.indexOf(synth.returnProps().ftype)/2  , synth.returnProps().ftype            );
+   })
+   // Vibrato and Pitch Bend 
+   listenSlider(UI_VIBR_DEPTH.parentNode, function(e) {
+      VIBRATO_DEPTH  = Math.min(200, Math.max(0  , VIBRATO_DEPTH+ e.movementX *2 ));
+      updateSlider      (UI_VIBR_DEPTH, VIBRATO_DEPTH/200                           , VIBRATO_DEPTH                    +"¢");
+   });
+   listenSlider(UI_VIBR_RATE.parentNode, function(e) {
+      VIBRATO_RATE   = Math.min(20 , Math.max(0.1, VIBRATO_RATE + e.movementX /10));
+      updateSlider      (UI_VIBR_RATE, VIBRATO_RATE/20                              , Math.round(VIBRATO_RATE*10)/10  +"Hz");
+   });
+   listenSlider(BENDRANGE.parentNode, function(e) {
+      UI_BEND += e.movementX/6;
+      synth.setPitchBendRange(UI_BEND);
+      updateSlider      (BENDRANGE, synth.returnProps().pitchBendRange/12           , synth.returnProps().pitchBendRange+"smts");
+   });
 
 
-	// Utils
-	function savePatch() {
-		//var field garfield harharhar
-		var field = d.getElementById("patchData");
-		var data = [];
-		data.push(JSON.stringify(synth.returnProps()), Math.round(VIBRATO_RATE*10)/10, Math.round(VIBRATO_DEPTH*10)/10);
-		field.value = data.join("`");
-		field.select();
-	}
-	function loadPatch(a) { 
-		var data = (a)? a.split("`"): d.getElementById("patchData").value.split("`");
-		try {
-			synth.load(JSON.parse(data[0]));
-		} catch(e){
-			d.getElementById("patchData").value = "wot?";
-			return;
-		}
-		VIBRATO_RATE = parseFloat(data[1]);
-		VIBRATO_DEPTH = parseFloat(data[2]);
-		evokeUISettings();
-	}
+   // Utils
+   function savePatch() {
+      //var field garfield harharhar
+      var field = d.getElementById("patchData");
+      var data = [];
+      data.push(JSON.stringify(synth.returnProps()), Math.round(VIBRATO_RATE*10)/10, Math.round(VIBRATO_DEPTH*10)/10);
+      field.value = data.join("`");
+      field.select();
+   }
+   function loadPatch(a) { 
+      var data = (a)? a.split("`"): d.getElementById("patchData").value.split("`");
+      try {
+         synth.load(JSON.parse(data[0]));
+      } catch(e){
+         d.getElementById("patchData").value = "wot?";
+         return;
+      }
+      VIBRATO_RATE = parseFloat(data[1]);
+      VIBRATO_DEPTH = parseFloat(data[2]);
+      evokeUISettings();
+   }
 
-	</script>
+</script>
 </body>
 </html>
