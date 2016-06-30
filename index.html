@@ -465,6 +465,12 @@
 
          osc1.start();
          osc2.start();
+         osc1.onended = function() {
+            this.disconnect();
+         }
+         osc2.onended = function() {
+            this.disconnect();
+         }
 
          // Amplitude Envelope
             // Attack
@@ -504,7 +510,7 @@
       this.killNote     = function ( midiNote ) {
          
          // Amplitude Release
-         // envelopes[midiNote].gain.exponentialRampToValueAtTime(sustain, ctx.currentTime);
+         envelopes[midiNote].gain.exponentialRampToValueAtTime(_r.sustain, ctx.currentTime);
          envelopes[midiNote].gain
             .exponentialRampToValueAtTime(0.001    , ctx.currentTime + (_r.release/1000) );
 
@@ -862,7 +868,7 @@
       //var field garfield harharhar
       var field = d.getElementById("patchData");
       var data = [];
-      data.push(JSON.stringify(synth.returnProps()), Math.round(VIBRATO_RATE*10)/10, Math.round(VIBRATO_DEPTH*10)/10);
+      data.push(JSON.stringify(synth.returnProps()), vibrator.rate, vibrator.depth);
       field.value = data.join("`");
       field.select();
    }
@@ -874,8 +880,8 @@
          d.getElementById("patchData").value = "wot?";
          return;
       }
-      VIBRATO_RATE = parseFloat(data[1]);
-      VIBRATO_DEPTH = parseFloat(data[2]);
+      vibrator.setRate  (parseFloat(data[1]));
+      vibrator.setDepth (parseFloat(data[2]));
       evokeUISettings();
    }
 
