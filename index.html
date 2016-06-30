@@ -117,8 +117,7 @@
 				<div class="button" onclick="savePatch()">SAVE</div>
 				<div class="button" onclick="loadPatch()">LOAD</div>
 				<div class="button" onclick="synth.killAll()">PANIC</div>
-				<div class="button" onclick="loadPatch(atob('eyJ2ZWxvY2l0eSI6MSwiZ2FpbjEiOjAuNzUwMDAwMDAwMDAwMDAwMiwidHJhbnNwb3NlMSI6LTEyLCJ0dW5lMSI6MCwid2F2ZWZvcm0xIjoic2F3dG9vdGgiLCJnYWluMiI6MC42OTQwMDAwMDAwMDAwMDAyLCJ0cmFuc3Bvc2UyIjotMTIsInR1bmUyIjowLCJ3YXZlZm9ybTIiOiJzYXd0b290aCIsImF0dGFjayI6MiwiZGVjYXkiOjcyMCwic3VzdGFpbiI6MC45OTAwMDAwMDAwMDAwMDAzLCJyZWxlYXNlIjo0MjAuMDAwMSwiZmF0dGFjayI6MjkwLCJmZGVjYXkiOjI4MCwiZnN1c3RhaW4iOjAuMDA0OTk5OTk5OTk5OTk5OTQ3LCJmcmVsZWFzZSI6NDIwLCJmY3V0IjoxNTYuNzg5OTAyMjExODEwNywiZnEiOjE1LjAwMDAwMDAwMDAwMDAwMiwiZmFtb3VudCI6MC4yMDAwMDAwMDAwMDAwMDAyMywiZnR5cGUiOiJsb3dwYXNzIiwicGl0Y2hCZW5kUmFuZ2UiOjEyfWAzLjVgMA=='))">WOW</div>
-				<input id="patchData" type="text" placeholder="paste patch here" size=40/>
+				<input id="patchData" type="text" placeholder="paste patch here" size=16/>
 				<div class="button" onclick="window.open('https://github.com/khoin/BiOscillator')">FORK ME ON GITHUB</div>
 			</div>
 			<div class="groupContainer half">
@@ -432,7 +431,7 @@
          });
       }
 
-      this.playNote     = function ( midiNote , ga ) {
+      this.playNote     = function ( midiNote , ga ) { 
          var osc1       = ctx.createOscillator();
          var osc2       = ctx.createOscillator();
          var osc1gain   = ctx.createGain();
@@ -518,7 +517,7 @@
          oscillators[midiNote][0].stop( ctx.currentTime + (_r.release/1000) );
          oscillators[midiNote][1].stop( ctx.currentTime + (_r.release/1000) );
          
-         oscillators[midiNote]      = 
+         //oscillators[midiNote]      = 
          oscillators[midiNote][0]   = 
          oscillators[midiNote][1]   = 
          gains[midiNote]            =
@@ -533,6 +532,41 @@
          });
       
       }
+      return this;
+   }
+
+   var Vibrator = function(synth, rate, depth) {
+
+      var synth = synth,
+          clock,
+          _     = this;
+
+      this.rate = rate || 7;
+      this.depth= depth|| 50;
+
+      this.setDepth  = function (val) {
+         _.depth     = Math.min(200 , Math.max( _.depth + val , 0  )); 
+      }
+
+      this.setRate   = function (val) {
+         _.rate      = Math.min(20  , Math.max( _.rate +  val, 0.1 ));
+      }
+
+      this.start     = function() {
+         if(clock) return;
+         clock = setInterval( function() { 
+            synth.unmappedOscs.forEach( function ( osc ) { 
+               //if (!osc) return;
+               osc.detune.value = _.depth *Math.sin( 2*Math.PI *_.rate *Date.now()/1000);
+            })
+         }, 1);
+      }
+
+      this.stop      = function() {
+         clearInterval(clock);
+         clock = undefined;
+      }
+
       return this;
    }
 
@@ -563,6 +597,10 @@
       ftype       : 'lowpass',
       pitchBendRange: 12
    });
+
+   var vibrator = new Vibrator(synth);
+
+   vibrator.start();
 
    // Indicator Initiation
    var indicators = [];
@@ -605,16 +643,6 @@
       };
    });
 
-   //Vibrato
-   var   VIBRATO_RATE = 7,
-         VIBRATO_DEPTH= 50;
-   setInterval( function() {
-      (synth.unmappedOscs).forEach( function ( osc ) {
-         //if (!osc) return;
-         osc.detune.value = VIBRATO_DEPTH *Math.sin( 2*Math.PI *VIBRATO_RATE *Date.now()/1000);
-      })
-   }, 1);
-
    // UI Functions
    function updateSlider         ( element , value , displayText ) {
       element.textContent = displayText;
@@ -637,7 +665,7 @@
 
    
    // Data Tables
-   var waveforms     = ['sine', 'triangle', 'sawtooth', 'square'];
+   var WAVEFORMS     = ['sine', 'triangle', 'sawtooth', 'square'];
    var FILTER_TYPES  = ["lowpass", "highpass","bandpass"];
 
    // UI Elements
@@ -654,9 +682,9 @@
          AMPSUS  = d.getElementById("ampsus"),
          AMPREL  = d.getElementById("amprel"),
          AMPVEL  = d.getElementById("ampvel");
-   var   UI_VIBR_DEPTH = d.getElementById("vibratoDepth"),
-         UI_VIBR_RATE  = d.getElementById("vibratoRate") ,
-         BENDRANGE     = d.getElementById("bendRange")   ;
+   var   VIBDEP  = d.getElementById("vibratoDepth"),
+         VIBRAT  = d.getElementById("vibratoRate") ,
+         BENDRANGE = d.getElementById("bendRange") ;
    var   FILATT    = d.getElementById("filatt"),
          FILDEC    = d.getElementById("fildec"),
          FILSUS    = d.getElementById("filsus"),
@@ -680,20 +708,20 @@
 
       // Evoke values for integers non-numerical values
       UI_SEM1 = synthSettings.transpose1;
-      UI_WAV1 = waveforms.indexOf(synthSettings.waveform1);
+      UI_WAV1 = WAVEFORMS.indexOf(synthSettings.waveform1);
       UI_SEM2 = synthSettings.transpose2;
-      UI_WAV2 = waveforms.indexOf(synthSettings.waveform2);
+      UI_WAV2 = WAVEFORMS.indexOf(synthSettings.waveform2);
       UI_FTYP = FILTER_TYPES.indexOf(synthSettings.ftype);
 
       updateSlider      (OSC1VOL, synthSettings.gain1                         , synthSettings.gain1   *100  + "%");
       updateSignedSlider(OSC1TUN, synthSettings.tune1     /40                 , synthSettings.tune1              );
       updateSignedSlider(OSC1SEM, synthSettings.transpose1/48                 , synthSettings.transpose1         );
-      updateSlider      (OSC1WAV, waveforms.indexOf(synthSettings.waveform1)/3, synthSettings.waveform1          );
+      updateSlider      (OSC1WAV, WAVEFORMS.indexOf(synthSettings.waveform1)/3, synthSettings.waveform1          );
 
       updateSlider      (OSC2VOL, synthSettings.gain2                         , synthSettings.gain2   *100  + "%");
       updateSignedSlider(OSC2TUN, synthSettings.tune2     /40                 , synthSettings.tune2              );
       updateSignedSlider(OSC2SEM, synthSettings.transpose2/48                 , synthSettings.transpose2         );
-      updateSlider      (OSC2WAV, waveforms.indexOf(synthSettings.waveform2)/3, synthSettings.waveform2          );
+      updateSlider      (OSC2WAV, WAVEFORMS.indexOf(synthSettings.waveform2)/3, synthSettings.waveform2          );
       
       updateSlider      (AMPATT , synthSettings.attack   /5000                , synthSettings.attack        +"ms");
       updateSlider      (AMPDEC , synthSettings.decay    /5000                , synthSettings.decay         +"ms");
@@ -711,8 +739,8 @@
       updateSlider      (FILAMT , synthSettings.famount                       , synthSettings.famount       + "%");
       updateSlider      (FILTYP , FILTER_TYPES.indexOf(synthSettings.ftype)/2 , synthSettings.ftype              );
 
-      updateSlider      (UI_VIBR_DEPTH, VIBRATO_DEPTH    /200                 , VIBRATO_DEPTH               + "¢");
-      updateSlider      (UI_VIBR_RATE , VIBRATO_RATE     /20                  , VIBRATO_RATE                +"Hz");
+      updateSlider      (VIBDEP , vibrator.depth    /200                      , vibrator.depth              + "¢");
+      updateSlider      (VIBRAT , vibrator.rate     /20                       , vibrator.rate               +"Hz");
       updateSlider      (BENDRANGE    , synthSettings.pitchBendRange/12       , synthSettings.pitchBendRange+"smts");
    }
    evokeUISettings();
@@ -734,8 +762,8 @@
    listenSlider( OSC1WAV.parentNode, function(e) { 
       UI_WAV1 += e.movementX/50;
       UI_WAV1  = Math.min(3 , Math.max(0, UI_WAV1) );
-      synth.setWaveform1( waveforms[Math.floor(UI_WAV1)] );
-      updateSlider      (OSC1WAV, waveforms.indexOf(synth.returnProps().waveform1)/3, synth.returnProps().waveform1        );
+      synth.setWaveform1( WAVEFORMS[Math.floor(UI_WAV1)] );
+      updateSlider      (OSC1WAV, WAVEFORMS.indexOf(synth.returnProps().waveform1)/3, synth.returnProps().waveform1        );
    });
    // OSC 2
    listenSlider(OSC2VOL.parentNode, function(e) { 
@@ -754,8 +782,8 @@
    listenSlider(OSC2WAV.parentNode, function(e) { 
       UI_WAV2 += e.movementX/50;
       UI_WAV2 = Math.min(3,Math.max(0,UI_WAV2));
-      synth.setWaveform2( waveforms[Math.floor(UI_WAV2)] );
-      updateSlider      (OSC2WAV, waveforms.indexOf(synth.returnProps().waveform2)/3, synth.returnProps().waveform2        );
+      synth.setWaveform2( WAVEFORMS[Math.floor(UI_WAV2)] );
+      updateSlider      (OSC2WAV, WAVEFORMS.indexOf(synth.returnProps().waveform2)/3, synth.returnProps().waveform2        );
    });
    // Amplitude Envelopes
    listenSlider(AMPATT.parentNode, function(e) {
@@ -814,13 +842,13 @@
       updateSlider      (FILTYP, FILTER_TYPES.indexOf(synth.returnProps().ftype)/2  , synth.returnProps().ftype            );
    })
    // Vibrato and Pitch Bend 
-   listenSlider(UI_VIBR_DEPTH.parentNode, function(e) {
-      VIBRATO_DEPTH  = Math.min(200, Math.max(0  , VIBRATO_DEPTH+ e.movementX *2 ));
-      updateSlider      (UI_VIBR_DEPTH, VIBRATO_DEPTH/200                           , VIBRATO_DEPTH                    +"¢");
+   listenSlider(VIBDEP.parentNode, function(e) {
+      vibrator.setDepth ( e.movementX *2  );
+      updateSlider      (VIBDEP, vibrator.depth/200                                 , vibrator.depth                    +"¢");
    });
-   listenSlider(UI_VIBR_RATE.parentNode, function(e) {
-      VIBRATO_RATE   = Math.min(20 , Math.max(0.1, VIBRATO_RATE + e.movementX /10));
-      updateSlider      (UI_VIBR_RATE, VIBRATO_RATE/20                              , Math.round(VIBRATO_RATE*10)/10  +"Hz");
+   listenSlider(VIBRAT.parentNode, function(e) {
+      vibrator.setRate  ( e.movementX /10 );
+      updateSlider      (VIBRAT, vibrator.rate/20                                   , Math.round(vibrator.rate*10)/10  +"Hz");
    });
    listenSlider(BENDRANGE.parentNode, function(e) {
       UI_BEND += e.movementX/6;
